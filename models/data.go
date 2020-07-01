@@ -7,8 +7,8 @@ type Datasets struct {
 
 // Dataset ...
 type Dataset struct {
-	Code        string `json:"code"`
+	Alias       string `json:"alias"`
 	Description string `json:"description"`
-	Name        string `json:"name"`
+	Link        string `json:"link"`
 	Title       string `json:"title"`
 }
