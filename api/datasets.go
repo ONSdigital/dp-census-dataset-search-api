@@ -21,6 +21,12 @@ const (
 
 func (api *SearchAPI) getDatasets(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
+	setAccessControl(w, http.MethodGet)
+
+	if r.Method == http.MethodOptions {
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
 
 	var err error
 
@@ -113,8 +119,6 @@ func (api *SearchAPI) getDatasets(w http.ResponseWriter, r *http.Request) {
 		setErrorCode(w, errs.ErrInternalServer)
 	}
 
-	setJSONContentType(w)
-	setAccessControl(w)
 	_, err = w.Write(b)
 	if err != nil {
 		log.Event(ctx, "getDatasets endpoint: error writing response", log.ERROR, log.Error(err), logData)
@@ -124,11 +128,11 @@ func (api *SearchAPI) getDatasets(w http.ResponseWriter, r *http.Request) {
 	log.Event(ctx, "getDatasets endpoint: successfully searched index", log.INFO, logData)
 }
 
-func setJSONContentType(w http.ResponseWriter) {
-	w.Header().Set("Content-Type", "application/json")
-}
-func setAccessControl(w http.ResponseWriter) {
+func setAccessControl(w http.ResponseWriter, method string) {
+	w.Header().Set("Access-Control-Allow-Methods", method+",OPTIONS")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Max-Age", "86400")
+	w.Header().Set("Content-Type", "application/json")
 }
 
 func setErrorCode(w http.ResponseWriter, err error) {

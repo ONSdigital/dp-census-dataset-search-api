@@ -56,7 +56,7 @@ func routes(ctx context.Context,
 		datasetIndex:      datasetIndex,
 	}
 
-	api.router.HandleFunc("/datasets", api.getDatasets).Methods("GET")
+	api.router.HandleFunc("/datasets", api.getDatasets).Methods("GET", "OPTIONS")
 
 	return &api
 }
