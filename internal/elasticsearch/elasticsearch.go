@@ -63,17 +63,12 @@ func (api *API) DeleteSearchIndex(ctx context.Context, indexName string) (int, e
 	return status, nil
 }
 
-// AddDataset adds a document to an elasticsearch index
-func (api *API) AddDataset(ctx context.Context, indexName string, dataset *models.Dataset) (int, error) {
-
-	log.Event(ctx, "adding dataset", log.INFO, log.Data{"location": dataset.Title})
-
+// AddDocument adds a document to an elasticsearch index
+func (api *API) AddDocument(ctx context.Context, indexName string, bytes []byte) (int, error) {
 	path := api.url + "/" + indexName + "/_doc"
+	logData := log.Data{"path": path}
 
-	bytes, err := json.Marshal(dataset)
-	if err != nil {
-		return 0, err
-	}
+	log.Event(ctx, "adding dataset", log.INFO, logData)
 
 	_, status, err := api.CallElastic(ctx, path, "POST", bytes)
 	if err != nil {
@@ -201,6 +196,8 @@ func (api *API) CallElastic(ctx context.Context, path, method string, payload in
 	}
 	logData["json_body"] = string(jsonBody)
 	logData["status_code"] = resp.StatusCode
+
+	log.Event(ctx, "delete me - results are in", log.INFO, logData)
 
 	if resp.StatusCode < http.StatusOK || resp.StatusCode >= 300 {
 		log.Event(ctx, "failed", log.ERROR, log.Error(ErrorUnexpectedStatusCode), logData)

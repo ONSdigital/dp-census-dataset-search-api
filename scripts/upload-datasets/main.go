@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/csv"
+	"encoding/json"
 	"errors"
 	"flag"
 	"io"
@@ -10,7 +11,6 @@ import (
 	"os"
 
 	es "github.com/ONSdigital/dp-census-dataset-search-api/internal/elasticsearch"
-	"github.com/ONSdigital/dp-census-dataset-search-api/models"
 	dphttp "github.com/ONSdigital/dp-net/http"
 	"github.com/ONSdigital/log.go/log"
 )
@@ -23,6 +23,14 @@ const (
 )
 
 var datasetIndex, elasticsearchAPIURL, filename string
+
+// Dataset represents the data stored against a resource in elasticsearch index
+type Dataset struct {
+	Alias       string `json:"alias"`
+	Description string `json:"description"`
+	Link        string `json:"link"`
+	Title       string `json:"title"`
+}
 
 func main() {
 	ctx := context.Background()
@@ -111,16 +119,22 @@ func uploadDocs(ctx context.Context, esAPI *es.API, indexName, filename string) 
 			log.Event(ctx, "failed to read row", log.ERROR, log.Error(err))
 		}
 
-		datasetDoc := &models.Dataset{
+		datasetDoc := &Dataset{
 			Alias:       row[headerIndex["alias"]],
 			Description: row[headerIndex["description"]],
 			Link:        row[headerIndex["ons-link"]],
 			Title:       row[headerIndex["title"]],
 		}
 
+		bytes, err := json.Marshal(datasetDoc)
+		if err != nil {
+			log.Event(ctx, "failed to marshal dataset document to bytes", log.ERROR, log.Error(err), log.Data{"count": count})
+			return err
+		}
+
 		// Add document to elasticsearch index
-		if _, err = esAPI.AddDataset(ctx, indexName, datasetDoc); err != nil {
-			log.Event(ctx, "failed to upload document to index", log.ERROR, log.Error(err), log.Data{"count": count})
+		if _, err = esAPI.AddDocument(ctx, indexName, bytes); err != nil {
+			log.Event(ctx, "failed to upload dataset document to index", log.ERROR, log.Error(err), log.Data{"count": count})
 			return err
 		}
 	}
