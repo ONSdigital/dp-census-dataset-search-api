@@ -53,7 +53,7 @@
 							"norms": false
 						}
 					},
-					"type": "keyword"
+					"type": "text"
                 },
                 "title": {
                     "fields": {
@@ -64,7 +64,7 @@
 							"norms": false
 						}
 					},
-					"type": "keyword"
+					"type": "text"
                 },
                 "link": {
 					"index": false,

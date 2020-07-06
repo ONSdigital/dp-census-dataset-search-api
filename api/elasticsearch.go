@@ -8,5 +8,5 @@ import (
 
 // Elasticsearcher - An interface used to access elasticsearch
 type Elasticsearcher interface {
-	QueryGeoLocation(ctx context.Context, indexName string, query interface{}, limit, offset int) (*models.Datasets, int, error)
+	QueryGeoLocation(ctx context.Context, indexName string, query interface{}, limit, offset int) (*models.SearchResponse, int, error)
 }

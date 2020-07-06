@@ -9,7 +9,6 @@ import (
 	errs "github.com/ONSdigital/dp-census-dataset-search-api/apierrors"
 	"github.com/ONSdigital/dp-census-dataset-search-api/models"
 	"github.com/ONSdigital/log.go/log"
-	"github.com/gorilla/mux"
 )
 
 const (
@@ -22,22 +21,29 @@ const (
 
 func (api *SearchAPI) getDatasets(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	vars := mux.Vars(r)
 
 	var err error
 
-	id := vars["id"]
-
+	q := r.FormValue("q")
 	requestedLimit := r.FormValue("limit")
 	requestedOffset := r.FormValue("offset")
 
 	logData := log.Data{
-		"id":               id,
+		"query_term":       q,
 		"requested_limit":  requestedLimit,
 		"requested_offset": requestedOffset,
 	}
 
 	log.Event(ctx, "getDatasets endpoint: incoming request", log.INFO, logData)
+
+	// Remove leading and/or trailing whitespace
+	term := strings.TrimSpace(q)
+
+	if term == "" {
+		log.Event(ctx, "getDatasets endpoint: query parameter \"q\" empty", log.ERROR, log.Error(errs.ErrEmptySearchTerm), logData)
+		setErrorCode(w, errs.ErrEmptySearchTerm)
+		return
+	}
 
 	limit := defaultLimit
 	if requestedLimit != "" {
@@ -76,15 +82,30 @@ func (api *SearchAPI) getDatasets(w http.ResponseWriter, r *http.Request) {
 
 	log.Event(ctx, "getDatasets endpoint: just before querying search index", log.INFO, logData)
 
-	var query interface{}
-	// TODO build dataset search query
-	// TODO do search by calling QueryGeoLocation(ctx, api.datasetIndex, query interface{}, limit, offset int)
-	searchResults, status, err := api.elasticsearch.QueryGeoLocation(ctx, api.datasetIndex, query, limit, offset)
+	// build dataset search query
+	query := buildSearchQuery(term, limit, offset)
+
+	response, status, err := api.elasticsearch.QueryGeoLocation(ctx, api.datasetIndex, query, limit, offset)
 	if err != nil {
-		logData["es_status"] = status
+		logData["elasticsearch_status"] = status
 		log.Event(ctx, "getDatasets endpoint: failed to get search results", log.ERROR, log.Error(err), logData)
 		setErrorCode(w, err)
 	}
+
+	searchResults := &models.SearchResults{
+		Limit:      page.Limit,
+		Offset:     page.Offset,
+		TotalCount: response.Hits.Total,
+	}
+
+	for _, result := range response.Hits.HitList {
+
+		doc := result.Source
+		doc.Matches = result.Matches
+		searchResults.Items = append(searchResults.Items, doc)
+	}
+
+	searchResults.Count = len(searchResults.Items)
 
 	b, err := json.Marshal(searchResults)
 	if err != nil {
@@ -122,4 +143,112 @@ func setErrorCode(w http.ResponseWriter, err error) {
 	default:
 		http.Error(w, internalError, http.StatusInternalServerError)
 	}
+}
+
+// Body represents the request body to elasticsearch
+type Body struct {
+	From      int        `json:"from"`
+	Size      int        `json:"size"`
+	Highlight *Highlight `json:"highlight,omitempty"`
+	Query     Query      `json:"query"`
+	Sort      []Scores   `json:"sort"`
+	TotalHits bool       `json:"track_total_hits"`
+}
+
+// Highlight represents parts of the fields that matched
+type Highlight struct {
+	PreTags  []string          `json:"pre_tags,omitempty"`
+	PostTags []string          `json:"post_tags,omitempty"`
+	Fields   map[string]Object `json:"fields,omitempty"`
+	Order    string            `json:"score,omitempty"`
+}
+
+// Object represents an empty object (as expected by elasticsearch)
+type Object struct{}
+
+// Query represents the request query details
+type Query struct {
+	Bool Bool `json:"bool"`
+}
+
+// Bool represents the desirable goals for query
+type Bool struct {
+	Must   []Match `json:"must,omitempty"`
+	Should []Match `json:"should,omitempty"`
+}
+
+// Match represents the fields that the term should or must match within query
+type Match struct {
+	Match map[string]string `json:"match,omitempty"`
+}
+
+// Scores represents a list of scoring, e.g. scoring on relevance, but can add in secondary
+// score such as alphabetical order if relevance is the same for two search results
+type Scores struct {
+	Score Score `json:"_score"`
+}
+
+// Score contains the ordering of the score (ascending or descending)
+type Score struct {
+	Order string `json:"order"`
+}
+
+func buildSearchQuery(term string, limit, offset int) interface{} {
+	var object Object
+	highlight := make(map[string]Object)
+
+	highlight["alias"] = object
+	highlight["description"] = object
+	highlight["title"] = object
+
+	alias := make(map[string]string)
+	description := make(map[string]string)
+	title := make(map[string]string)
+	alias["alias"] = term
+	description["description"] = term
+	title["title"] = term
+
+	aliasMatch := Match{
+		Match: alias,
+	}
+
+	descriptionMatch := Match{
+		Match: description,
+	}
+
+	titleMatch := Match{
+		Match: title,
+	}
+
+	scores := Scores{
+		Score: Score{
+			Order: "desc",
+		},
+	}
+
+	listOfScores := []Scores{}
+	listOfScores = append(listOfScores, scores)
+
+	query := &Body{
+		From: offset,
+		Size: limit,
+		Highlight: &Highlight{
+			PreTags:  []string{"<b><em>"},
+			PostTags: []string{"</em></b>"},
+			Fields:   highlight,
+		},
+		Query: Query{
+			Bool: Bool{
+				Should: []Match{
+					aliasMatch,
+					descriptionMatch,
+					titleMatch,
+				},
+			},
+		},
+		Sort:      listOfScores,
+		TotalHits: true,
+	}
+
+	return query
 }

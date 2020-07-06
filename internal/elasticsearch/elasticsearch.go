@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 
+	errs "github.com/ONSdigital/dp-census-dataset-search-api/apierrors"
 	"github.com/ONSdigital/dp-census-dataset-search-api/models"
 	dphttp "github.com/ONSdigital/dp-net/http"
 	"github.com/ONSdigital/log.go/log"
@@ -128,40 +129,33 @@ func (api *API) SingleRequest(ctx context.Context, indexName string, document in
 // QueryGeoLocation ...
 // TODO - may want to generalise this, build query object before passing to this function as interface{}
 // and change function name to something like QuerySearchIndex?
-func (api *API) QueryGeoLocation(ctx context.Context, indexName string, query interface{}, limit, offset int) (*models.Datasets, int, error) {
-	// if geoLocation == nil {
-	// 	return nil, 0, errors.New("missing data")
-	// }
+func (api *API) QueryGeoLocation(ctx context.Context, indexName string, query interface{}, limit, offset int) (*models.SearchResponse, int, error) {
 
-	// if geoLocation.Type != "polygon" && geoLocation.Type != "multipolygon" {
-	// 	return nil, 0, errors.New("missing data")
-	// }
+	path := api.url + "/" + indexName + "/_search"
+	logData := log.Data{"query": query, "path": path}
 
-	// path := api.url + "/" + indexName + "/_search"
+	log.Event(ctx, "find documents based on search term", log.INFO, logData)
+	bytes, err := json.Marshal(query)
+	if err != nil {
+		log.Event(ctx, "unable to marshal elastic search query to bytes", log.ERROR, log.Error(err), logData)
+		return nil, 0, errs.ErrMarshallingQuery
+	}
 
-	// query := buildGeoLocationQuery(*geoLocation, relation)
+	responseBody, status, err := api.CallElastic(ctx, path, "GET", bytes)
+	logData["status"] = status
+	if err != nil {
+		log.Event(ctx, "failed to call elasticsearch", log.ERROR, log.Error(err), logData)
+		return nil, status, errs.ErrIndexNotFound
+	}
 
-	// log.Event(ctx, "get documents based on geo polygon search", log.INFO, log.Data{"query": query, "path": path})
+	response := &models.SearchResponse{}
 
-	// bytes, err := json.Marshal(query)
-	// if err != nil {
-	// 	return nil, 0, err
-	// }
+	if err = json.Unmarshal(responseBody, response); err != nil {
+		log.Event(ctx, "unable to unmarshal json body", log.ERROR, log.Error(err))
+		return nil, status, errs.ErrUnmarshallingJSON
+	}
 
-	// responseBody, status, err := api.CallElastic(ctx, path, "POST", bytes)
-	// if err != nil {
-	// 	return nil, status, err
-	// }
-
-	// response := &models.GeoLocationResponse{}
-
-	// if err = json.Unmarshal(responseBody, response); err != nil {
-	// 	log.Event(ctx, "unable to unmarshal json body", log.ERROR, log.Error(err))
-	// 	return nil, status, errs.ErrUnmarshallingJSON
-	// }
-
-	// return response, status, nil
-	return nil, 0, nil // dummey response
+	return response, status, nil
 }
 
 // CallElastic builds a request to elastic search based on the method, path and payload
@@ -215,23 +209,3 @@ func (api *API) CallElastic(ctx context.Context, path, method string, payload in
 
 	return jsonBody, resp.StatusCode, nil
 }
-
-// func buildGeoLocationQuery(geoLocation models.GeoLocation, relation string) models.GeoLocationRequest {
-// 	return models.GeoLocationRequest{
-// 		Query: models.GeoLocationQuery{
-// 			Bool: models.BooleanObject{
-// 				Must: models.MustObject{
-// 					Match: models.MatchAll{},
-// 				},
-// 				Filter: models.GeoFilter{
-// 					Shape: models.GeoShape{
-// 						Location: models.GeoLocationObj{
-// 							Shape:    geoLocation,
-// 							Relation: relation,
-// 						},
-// 					},
-// 				},
-// 			},
-// 		},
-// 	}
-// }
