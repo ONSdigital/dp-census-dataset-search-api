@@ -3,7 +3,7 @@ SHELL=bash
 BUILD=build
 BIN_DIR?=.
 
-SEARCH_API=dataset-search-api
+SEARCH_API=dataset-search
 
 build:
 	go generate ./...
