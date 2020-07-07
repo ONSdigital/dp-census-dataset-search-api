@@ -1,6 +1,6 @@
 # dp-census-dataset-search-api
 
-TODO description
+This is the dataset search API application for census Alpha project. To provide a continuously improving working example of search features needed to answer questions posed during the 2021 census alpha project.
 
 ### Requirements
 
@@ -15,12 +15,21 @@ In order to run the service locally you will need the following:
 
 - Clone the repo go get github.com/ONSdigital/dp-census-dataset-search-api
 - Run elasticsearch e.g. ./elasticsearch<version>/bin/elasticsearch
-- Follow setting up data
-- Run `make debug`
+- Follow [setting up data](#setting-up-data)
+- Run `make debug` to start search API service
+
+Follow swagger documentation on how to interact with local api, some examples are below:
+
+```
+curl -XOPTIONS localhost:10200/datasets -vvv
+curl -XGET localhost:10200/datasets?q=cpih -vvv
+curl -XGET localhost:10200/datasets?q=estimates -vvv
+curl -XGET "localhost:10200/datasets?q=estimates&offset=5&limit=5" -vvv
+```
 
 #### Setting up data
 
-TODO
+Once elasticsearch is running and you can connect to your instance. Follow the instructions [here](scripts/README.md) to load in some prepared cmd datasets.
 
 ### Configuration
 

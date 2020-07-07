@@ -17,7 +17,7 @@ build:
 	
 cmd-datasets-csv: build
 	go build -o ../$(BUILD)/$(BIN_DIR)/$(RETRIEVE_CMD_DATASETS) $(RETRIEVE_CMD_DATASETS)/main.go
-	HUMAN_LOG=1 go run -race $(RETRIEVE_CMD_DATASETS)/main.go -mongodb-bind-addr=$(MONGODB_BIND_ADDR)
+	HUMAN_LOG=1 go run -race $(RETRIEVE_CMD_DATASETS)/main.go -mongodb-bind-addr=$(MONGODB_BIND_ADDR) -filename=$(FILENAME)
 
 upload-datasets: build
 	go build -o ../$(BUILD)/$(BIN_DIR)/$(UPLOAD_DATASETS) $(UPLOAD_DATASETS)/main.go

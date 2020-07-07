@@ -19,19 +19,24 @@ const (
 	onsSite = "https://www.ons.gov.uk"
 
 	defaultBindAddr  = "localhost:27017"
-	filename         = "cmd-datasets.csv"
+	defaultFilename  = "cmd-datasets.csv"
 	missingFileError = "no such file or directory"
 )
 
-var bindAddr string
+var bindAddr, filename string
 
 func main() {
 	ctx := context.Background()
 	flag.StringVar(&bindAddr, "mongodb-bind-addr", defaultBindAddr, "the address including authorisation if needed to bind to mongo database")
+	flag.StringVar(&filename, "filename", defaultFilename, "the name and path of the file location to create file")
 	flag.Parse()
 
 	if bindAddr == "" {
 		bindAddr = defaultBindAddr
+	}
+
+	if filename == "" {
+		filename = defaultFilename
 	}
 
 	log.Event(ctx, "script variables", log.INFO, log.Data{"mongodb_bind_addr": bindAddr})
