@@ -1,0 +1,146 @@
+openapi: 3.0.0
+info:
+  description: "Used to search for possible datasets."
+  version: "v0.1.0"
+  title: "Search for a dataset"
+  license:
+    name: "Open Government Licence v3.0"
+    url: "http://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/"
+servers:
+  - url: http://cat.ons.digital/v1
+    description: "Staging API for prototype"
+tags:
+- name: "Public"
+paths:
+  /datasets:
+    get:
+      tags:
+      - "Public"
+      summary: "Returns a list of search results based on the search term"
+      parameters:
+      - $ref: '#/components/parameters/q'
+      - $ref: '#/components/parameters/limit'
+      - $ref: '#/components/parameters/offset'
+      responses:
+        200:
+          description: "A json list containing search results of datasets which are relevant to the search term"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Datasets'
+        400:
+          $ref: '#/components/responses/InvalidRequestError'
+        500:
+          $ref: '#/components/responses/InternalError'
+    options:
+      tags:
+      - "Public"
+      summary: "Information about the communication options available for the target resource"
+      responses:
+        204:
+          description: "No Content"
+          headers:
+            Access-Control-Allow-Methods:
+              schema:
+                type: string
+              description: "The methods allowed access against this resource as a comma separated list."
+            Access-Control-Allow-Origin:
+              schema:
+                type: string
+              description: "The web urls allowed access against this resource as a comma separated list."
+              example: "*"
+            Access-Control-Max-Age:
+              schema:
+                type: integer
+              description: "Header indicates how long the results of a preflight request can be cached."
+              example: 86400
+        500:
+          $ref: '#/components/responses/InternalError'
+components:
+  parameters:
+    q:
+      name: q
+      description: "The searchable term to find relevant datasets."
+      in: query
+      required: true
+      schema:
+        type: string
+    limit:
+      name: limit
+      description: "The number of items requested, defaulted to 50 and limited to 1000."
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 1000
+        default: 50
+    offset:
+      name: offset
+      description: "The first row of resources to retrieve, starting at 0. Use this parameter as a pagination mechanism along with the limit parameter."
+      in: query
+      schema:
+        type: integer
+        minimum: 0
+        default: 0
+  schemas:
+    Datasets:
+      description: "The resulting resource of the completed search against a dimension hierarchy."
+      type: object
+      required: ["count","limit", "items", "offset", "total_count"]
+      properties:
+        count:
+          description: "The number of items returned."
+          type: integer
+        items:
+          description: "The results of the postcode search."
+          type: array
+          items:
+            $ref: '#/components/schemas/SearchResponse'
+        limit:
+          description: "The number of items requested, defaulted to 50 and limited to 1000."
+          type: integer
+        offset:
+          description: "The first row of items to retrieve, starting at 0. Use this parameter as a pagination mechanism along with the limit parameter. The total number of items that one can page through is limited to 1000 items."
+          type: integer
+        total_count:
+          description: "The total number of resources that matched request."
+          type: integer
+          maximum: 10000
+    SearchResponse:
+      description: "An individual result (dataset) based on the search query."
+      type: object
+      required: ["description", "link", "title"]
+      properties:
+        alias:
+          type: string
+          description: "The shortened version of the title, usually an acronym."
+          example: "CPIH01"
+        description:
+          type: string
+          description: "A description of the dataset."
+        link: 
+          type: string
+          description: "A link to the dataset on the ons website."
+        title:
+          type: string
+          description: "The name in which the dataset is known."
+        matches:
+          $ref: '#/components/schemas/Matches'
+    Matches:
+      description: "A list of text matches across fields that were analysed. Embeds html tags <b><em>{matched piece of text}<\b><\em>. Can be used by web ui to desplay the matched data."
+      type: object
+      properties:
+        alias:
+          description: "Highlighted alias field due to matched pieces of text."
+          type: string
+        description:
+          description: "Highlighted description field due to matched pieces of text."
+          type: string
+        title:
+          description: "Highlighted title field due to matched pieces of text."
+          type: string
+  responses:
+    InvalidRequestError:
+      description: "Failed to process the request due to invalid request."
+    InternalError:
+      description: "Failed to process the request due to an internal error."

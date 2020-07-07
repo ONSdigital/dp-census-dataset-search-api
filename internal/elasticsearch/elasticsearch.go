@@ -197,8 +197,6 @@ func (api *API) CallElastic(ctx context.Context, path, method string, payload in
 	logData["json_body"] = string(jsonBody)
 	logData["status_code"] = resp.StatusCode
 
-	log.Event(ctx, "delete me - results are in", log.INFO, logData)
-
 	if resp.StatusCode < http.StatusOK || resp.StatusCode >= 300 {
 		log.Event(ctx, "failed", log.ERROR, log.Error(ErrorUnexpectedStatusCode), logData)
 		return nil, resp.StatusCode, ErrorUnexpectedStatusCode
