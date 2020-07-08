@@ -6,6 +6,7 @@ A list of helpful scripts to load data for use in the Search API.
 
 - [retrieve cmd datasets](#retrieve-cmd-datasets)
 - [load parent docs](#load-datasets)
+- [retrieve dataset taxonomy](#retrieve-dataset-taxonomy)
 
 ### Retrieve CMD Datasets
 
@@ -41,3 +42,20 @@ One can use the Retrieve cmd datasets script to generate a new csv file or use t
     - Run `make upload-datasets`
 - Use go run command with or without flags `-dataset-index`, `-filename` and/or `elasticsearch_url` being set
     - `go run upload-datasets/main.go -dataset-index=<elasticsearch index> -filename=<file name and loaction> -elasticsearch_url=<elasticsearch bin address>`
+
+### Retrieve Dataset Taxonomy
+
+This script scrapes the ons website to pull out taxonomy hierarchy by iterating through pages.
+
+You can run either of the following commands:
+
+- Use Makefile
+    - Set `taxonomy_filename` environment variable with, should end with `.json`:
+    ```
+    export taxonomy_filename=<filename and location>
+    ```
+    - Run `make taxonomy-json`
+- Use go run command with or without flags `-filename` being set
+    - `go run retrieve-dataset-taxonomy/main.go -filename=<file name and loaction>`
+    
+if you do not set the flag or environment variable for filename, then the script will use a default value set to `../taxonomy/taxonomy.json`.
