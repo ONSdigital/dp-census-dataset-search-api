@@ -204,13 +204,22 @@ func buildSearchQuery(term string, limit, offset int) interface{} {
 	highlight["alias"] = object
 	highlight["description"] = object
 	highlight["title"] = object
+	highlight["topic1"] = object
+	highlight["topic2"] = object
+	highlight["topic3"] = object
 
 	alias := make(map[string]string)
 	description := make(map[string]string)
 	title := make(map[string]string)
+	topic1 := make(map[string]string)
+	topic2 := make(map[string]string)
+	topic3 := make(map[string]string)
 	alias["alias"] = term
 	description["description"] = term
 	title["title"] = term
+	topic1["topic1"] = term
+	topic2["topic2"] = term
+	topic3["topic3"] = term
 
 	aliasMatch := Match{
 		Match: alias,
@@ -222,6 +231,18 @@ func buildSearchQuery(term string, limit, offset int) interface{} {
 
 	titleMatch := Match{
 		Match: title,
+	}
+
+	topic1Match := Match{
+		Match: topic1,
+	}
+
+	topic2Match := Match{
+		Match: topic2,
+	}
+
+	topic3Match := Match{
+		Match: topic3,
 	}
 
 	scores := Scores{
@@ -247,6 +268,9 @@ func buildSearchQuery(term string, limit, offset int) interface{} {
 					aliasMatch,
 					descriptionMatch,
 					titleMatch,
+					topic1Match,
+					topic2Match,
+					topic3Match,
 				},
 			},
 		},

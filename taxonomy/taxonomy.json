@@ -1,0 +1,544 @@
+{
+  "topics": [
+    {
+      "title": "Economy",
+      "formatted_title": "economy",
+      "child_topics": [
+        {
+          "title": "Economic output and productivity",
+          "formatted_title": "economicoutputandproductivity",
+          "child_topics": [
+            {
+              "title": "Output",
+              "formatted_title": "output"
+            },
+            {
+              "title": "Productivity measures",
+              "formatted_title": "productivitymeasures"
+            },
+            {
+              "title": "Public services productivity",
+              "formatted_title": "publicservicesproductivity"
+            }
+          ]
+        },
+        {
+          "title": "Environmental accounts",
+          "formatted_title": "environmentalaccounts"
+        },
+        {
+          "title": "Government, public sector and taxes",
+          "formatted_title": "governmentpublicsectorandtaxes",
+          "child_topics": [
+            {
+              "title": "Local government finance",
+              "formatted_title": "localgovernmentfinance"
+            },
+            {
+              "title": "Public sector finance",
+              "formatted_title": "publicsectorfinance"
+            },
+            {
+              "title": "Public spending",
+              "formatted_title": "publicspending"
+            },
+            {
+              "title": "Research and development expenditure",
+              "formatted_title": "researchanddevelopmentexpenditure"
+            },
+            {
+              "title": "Taxes and revenue",
+              "formatted_title": "taxesandrevenue"
+            }
+          ]
+        },
+        {
+          "title": "Gross Domestic Product (GDP)",
+          "formatted_title": "grossdomesticproductgdp"
+        },
+        {
+          "title": "Gross Value Added (GVA)",
+          "formatted_title": "grossvalueaddedgva"
+        },
+        {
+          "title": "Inflation and price indices",
+          "formatted_title": "inflationandpriceindices"
+        },
+        {
+          "title": "Investments, pensions and trusts",
+          "formatted_title": "investmentspensionsandtrusts"
+        },
+        {
+          "title": "National accounts",
+          "formatted_title": "nationalaccounts",
+          "child_topics": [
+            {
+              "title": "Balance of payments",
+              "formatted_title": "balanceofpayments"
+            },
+            {
+              "title": "Satellite accounts",
+              "formatted_title": "satelliteaccounts"
+            },
+            {
+              "title": "Supply and use tables",
+              "formatted_title": "supplyandusetables"
+            },
+            {
+              "title": "UK sector accounts",
+              "formatted_title": "uksectoraccounts"
+            }
+          ]
+        },
+        {
+          "title": "Regional accounts",
+          "formatted_title": "regionalaccounts",
+          "child_topics": [
+            {
+              "title": "Gross disposable household income",
+              "formatted_title": "grossdisposablehouseholdincome"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Employment and labour market",
+      "formatted_title": "employmentandlabourmarket",
+      "child_topics": [
+        {
+          "title": "People in work",
+          "formatted_title": "peopleinwork",
+          "child_topics": [
+            {
+              "title": "Earnings and working hours",
+              "formatted_title": "earningsandworkinghours"
+            },
+            {
+              "title": "Employment and employee types",
+              "formatted_title": "employmentandemployeetypes"
+            },
+            {
+              "title": "Labour productivity",
+              "formatted_title": "labourproductivity"
+            },
+            {
+              "title": "Public sector personnel",
+              "formatted_title": "publicsectorpersonnel"
+            },
+            {
+              "title": "Workplace disputes and working conditions",
+              "formatted_title": "workplacedisputesandworkingconditions"
+            },
+            {
+              "title": "Workplace pensions",
+              "formatted_title": "workplacepensions"
+            }
+          ]
+        },
+        {
+          "title": "People not in work",
+          "formatted_title": "peoplenotinwork",
+          "child_topics": [
+            {
+              "title": "Economic inactivity",
+              "formatted_title": "economicinactivity"
+            },
+            {
+              "title": "Out of work benefits",
+              "formatted_title": "outofworkbenefits"
+            },
+            {
+              "title": "Redundancies",
+              "formatted_title": "redundancies"
+            },
+            {
+              "title": "Unemployment",
+              "formatted_title": "unemployment"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Employment and labour market",
+      "formatted_title": "employmentandlabourmarket",
+      "child_topics": [
+        {
+          "title": "People in work",
+          "formatted_title": "peopleinwork",
+          "child_topics": [
+            {
+              "title": "Earnings and working hours",
+              "formatted_title": "earningsandworkinghours"
+            },
+            {
+              "title": "Employment and employee types",
+              "formatted_title": "employmentandemployeetypes"
+            },
+            {
+              "title": "Labour productivity",
+              "formatted_title": "labourproductivity"
+            },
+            {
+              "title": "Public sector personnel",
+              "formatted_title": "publicsectorpersonnel"
+            },
+            {
+              "title": "Workplace disputes and working conditions",
+              "formatted_title": "workplacedisputesandworkingconditions"
+            },
+            {
+              "title": "Workplace pensions",
+              "formatted_title": "workplacepensions"
+            }
+          ]
+        },
+        {
+          "title": "People not in work",
+          "formatted_title": "peoplenotinwork",
+          "child_topics": [
+            {
+              "title": "Economic inactivity",
+              "formatted_title": "economicinactivity"
+            },
+            {
+              "title": "Out of work benefits",
+              "formatted_title": "outofworkbenefits"
+            },
+            {
+              "title": "Redundancies",
+              "formatted_title": "redundancies"
+            },
+            {
+              "title": "Unemployment",
+              "formatted_title": "unemployment"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Economy",
+      "formatted_title": "economy",
+      "child_topics": [
+        {
+          "title": "Economic output and productivity",
+          "formatted_title": "economicoutputandproductivity",
+          "child_topics": [
+            {
+              "title": "Output",
+              "formatted_title": "output"
+            },
+            {
+              "title": "Productivity measures",
+              "formatted_title": "productivitymeasures"
+            },
+            {
+              "title": "Public services productivity",
+              "formatted_title": "publicservicesproductivity"
+            }
+          ]
+        },
+        {
+          "title": "Environmental accounts",
+          "formatted_title": "environmentalaccounts"
+        },
+        {
+          "title": "Government, public sector and taxes",
+          "formatted_title": "governmentpublicsectorandtaxes",
+          "child_topics": [
+            {
+              "title": "Local government finance",
+              "formatted_title": "localgovernmentfinance"
+            },
+            {
+              "title": "Public sector finance",
+              "formatted_title": "publicsectorfinance"
+            },
+            {
+              "title": "Public spending",
+              "formatted_title": "publicspending"
+            },
+            {
+              "title": "Research and development expenditure",
+              "formatted_title": "researchanddevelopmentexpenditure"
+            },
+            {
+              "title": "Taxes and revenue",
+              "formatted_title": "taxesandrevenue"
+            }
+          ]
+        },
+        {
+          "title": "Gross Domestic Product (GDP)",
+          "formatted_title": "grossdomesticproductgdp"
+        },
+        {
+          "title": "Gross Value Added (GVA)",
+          "formatted_title": "grossvalueaddedgva"
+        },
+        {
+          "title": "Inflation and price indices",
+          "formatted_title": "inflationandpriceindices"
+        },
+        {
+          "title": "Investments, pensions and trusts",
+          "formatted_title": "investmentspensionsandtrusts"
+        },
+        {
+          "title": "National accounts",
+          "formatted_title": "nationalaccounts",
+          "child_topics": [
+            {
+              "title": "Balance of payments",
+              "formatted_title": "balanceofpayments"
+            },
+            {
+              "title": "Satellite accounts",
+              "formatted_title": "satelliteaccounts"
+            },
+            {
+              "title": "Supply and use tables",
+              "formatted_title": "supplyandusetables"
+            },
+            {
+              "title": "UK sector accounts",
+              "formatted_title": "uksectoraccounts"
+            }
+          ]
+        },
+        {
+          "title": "Regional accounts",
+          "formatted_title": "regionalaccounts",
+          "child_topics": [
+            {
+              "title": "Gross disposable household income",
+              "formatted_title": "grossdisposablehouseholdincome"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "People, population and community",
+      "formatted_title": "peoplepopulationandcommunity",
+      "child_topics": [
+        {
+          "title": "Births, deaths and marriages",
+          "formatted_title": "birthsdeathsandmarriages",
+          "child_topics": [
+            {
+              "title": "Adoption",
+              "formatted_title": "adoption"
+            },
+            {
+              "title": "Ageing",
+              "formatted_title": "ageing"
+            },
+            {
+              "title": "Conception and fertility rates",
+              "formatted_title": "conceptionandfertilityrates"
+            },
+            {
+              "title": "Deaths",
+              "formatted_title": "deaths"
+            },
+            {
+              "title": "Divorce",
+              "formatted_title": "divorce"
+            },
+            {
+              "title": "Families",
+              "formatted_title": "families"
+            },
+            {
+              "title": "Life expectancies",
+              "formatted_title": "lifeexpectancies"
+            },
+            {
+              "title": "Live births",
+              "formatted_title": "livebirths"
+            },
+            {
+              "title": "Marriage, cohabitation and civil partnerships",
+              "formatted_title": "marriagecohabitationandcivilpartnerships"
+            },
+            {
+              "title": "Maternities",
+              "formatted_title": "maternities"
+            },
+            {
+              "title": "Stillbirths",
+              "formatted_title": "stillbirths"
+            }
+          ]
+        },
+        {
+          "title": "Crime and justice",
+          "formatted_title": "crimeandjustice"
+        },
+        {
+          "title": "Cultural identity",
+          "formatted_title": "culturalidentity",
+          "child_topics": [
+            {
+              "title": "Ethnicity",
+              "formatted_title": "ethnicity"
+            },
+            {
+              "title": "Language",
+              "formatted_title": "language"
+            },
+            {
+              "title": "Religion",
+              "formatted_title": "religion"
+            },
+            {
+              "title": "Sexual identity",
+              "formatted_title": "sexuality"
+            }
+          ]
+        },
+        {
+          "title": "Education and childcare",
+          "formatted_title": "educationandchildcare"
+        },
+        {
+          "title": "Elections",
+          "formatted_title": "elections",
+          "child_topics": [
+            {
+              "title": "Electoral registration",
+              "formatted_title": "electoralregistration"
+            },
+            {
+              "title": "General elections",
+              "formatted_title": "generalelections"
+            },
+            {
+              "title": "Local government elections",
+              "formatted_title": "localgovernmentelections"
+            }
+          ]
+        },
+        {
+          "title": "Health and social care",
+          "formatted_title": "healthandsocialcare",
+          "child_topics": [
+            {
+              "title": "Causes of death",
+              "formatted_title": "causesofdeath"
+            },
+            {
+              "title": "Child health",
+              "formatted_title": "childhealth"
+            },
+            {
+              "title": "Coronavirus (COVID-19)",
+              "formatted_title": "conditionsanddiseases"
+            },
+            {
+              "title": "Disability",
+              "formatted_title": "disability"
+            },
+            {
+              "title": "Drug use, alcohol and smoking",
+              "formatted_title": "drugusealcoholandsmoking"
+            },
+            {
+              "title": "Health care system",
+              "formatted_title": "healthcaresystem"
+            },
+            {
+              "title": "Health inequalities",
+              "formatted_title": "healthinequalities"
+            },
+            {
+              "title": "Health and life expectancies",
+              "formatted_title": "healthandlifeexpectancies"
+            },
+            {
+              "title": "Health and well-being",
+              "formatted_title": "healthandwellbeing"
+            },
+            {
+              "title": "Mental health",
+              "formatted_title": "mentalhealth"
+            },
+            {
+              "title": "Social care",
+              "formatted_title": "socialcare"
+            }
+          ]
+        },
+        {
+          "title": "Household characteristics",
+          "formatted_title": "householdcharacteristics",
+          "child_topics": [
+            {
+              "title": "Home internet and social media usage",
+              "formatted_title": "homeinternetandsocialmediausage"
+            }
+          ]
+        },
+        {
+          "title": "Housing",
+          "formatted_title": "housing"
+        },
+        {
+          "title": "Leisure and tourism",
+          "formatted_title": "leisureandtourism"
+        },
+        {
+          "title": "Personal and household finances",
+          "formatted_title": "personalandhouseholdfinances",
+          "child_topics": [
+            {
+              "title": "Debt",
+              "formatted_title": "debt"
+            },
+            {
+              "title": "Expenditure",
+              "formatted_title": "expenditure"
+            },
+            {
+              "title": "Income and wealth",
+              "formatted_title": "incomeandwealth"
+            },
+            {
+              "title": "Pensions, savings and investments",
+              "formatted_title": "pensionssavingsandinvestments"
+            }
+          ]
+        },
+        {
+          "title": "Population and migration",
+          "formatted_title": "populationandmigration",
+          "child_topics": [
+            {
+              "title": "International migration",
+              "formatted_title": "internationalmigration"
+            },
+            {
+              "title": "Migration within the UK",
+              "formatted_title": "migrationwithintheuk"
+            },
+            {
+              "title": "Population estimates",
+              "formatted_title": "populationestimates"
+            },
+            {
+              "title": "Population projections",
+              "formatted_title": "populationprojections"
+            }
+          ]
+        },
+        {
+          "title": "Well-being",
+          "formatted_title": "wellbeing"
+        }
+      ]
+    }
+  ]
+}

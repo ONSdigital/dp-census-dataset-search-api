@@ -66,6 +66,39 @@
 					},
 					"type": "text"
                 },
+                "topic1": {
+                    "fields": {
+						"raw": {
+							"analyzer": "raw_analyzer",
+							"type": "text",
+							"index_options": "docs",
+							"norms": false
+						}
+					},
+					"type": "keyword"
+                },
+                "topic2": {
+                    "fields": {
+						"raw": {
+							"analyzer": "raw_analyzer",
+							"type": "text",
+							"index_options": "docs",
+							"norms": false
+						}
+					},
+					"type": "keyword"
+                },
+                "topic3": {
+                    "fields": {
+						"raw": {
+							"analyzer": "raw_analyzer",
+							"type": "text",
+							"index_options": "docs",
+							"norms": false
+						}
+					},
+					"type": "keyword"
+                },
                 "link": {
 					"index": false,
                     "type": "text"
