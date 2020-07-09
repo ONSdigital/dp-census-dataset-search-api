@@ -71,7 +71,7 @@ func main() {
 		}
 	}
 
-	headerLine := "title,alias,description,ons-link\n"
+	headerLine := "title,alias,description,topic,ons-link\n"
 	writeToFile(headerLine)
 
 	for i, dataset := range datasets {
@@ -110,7 +110,27 @@ func main() {
 			continue
 		}
 
-		row := `"` + dataset.Current.Title + `",` + dataset.ID + `,"` + dataset.Current.Description + `",` + url + "\n"
+		var topic string
+		if dataset.Current.QMI != nil && dataset.Current.QMI.HRef != "" {
+
+			// Remove host from qmi, leaving the path to methodology only
+			qmiPath := strings.SplitAfter(dataset.Current.QMI.HRef, "https://www.ons.gov.uk/")
+
+			// Check length to determine if qmi is an ons.gov.uk url
+			if len(qmiPath) > 1 {
+				// Split path in two leaving the dataset name separate from taxonomy of topics
+				qmiArray := strings.SplitAfter(qmiPath[1], "methodologies")
+				// Create a list of topics
+				list := strings.SplitAfter(qmiArray[0], "/")
+				// Find lowest level topic in list, this will be the second from last value due to "methodologies" keyword being the last value in list
+				topic = list[len(list)-2]
+
+				// Remove trailing whitespace off topic
+				topic = strings.TrimRight(topic, "/")
+			}
+		}
+
+		row := `"` + dataset.Current.Title + `",` + dataset.ID + `,"` + dataset.Current.Description + `","` + topic + `",` + url + "\n"
 
 		writeToFile(row)
 	}
@@ -140,23 +160,32 @@ func (m *Mongo) Init() (session *mgo.Session, err error) {
 	return session, nil
 }
 
-type dataset struct {
-	alias   string   `bson:"_id" json:"_id"`
-	current *current `bson:"current,omitempty"`
+// DatasetUpdate represents an evolving dataset with the current dataset and the updated dataset
+type DatasetUpdate struct {
+	ID      string   `bson:"_id,omitempty"         json:"id,omitempty"`
+	Current *Dataset `bson:"current,omitempty"     json:"current,omitempty"`
 }
 
-type current struct {
-	description string        `bson:"description"`
-	title       string        `bson:"title"`
-	links       *datasetLinks `bson:"links"`
+// Dataset represents information related to a single dataset
+type Dataset struct {
+	Description string        `bson:"description,omitempty" json:"description,omitempty"`
+	Links       *DatasetLinks `bson:"links,omitempty"       json:"links,omitempty"`
+	QMI         *QMIObject    `bson:"qmi,omitempty"       json:"qmi,omitempty"`
+	Title       string        `bson:"title,omitempty"       json:"title,omitempty"`
 }
 
-type datasetLinks struct {
-	latestVersion *linkObject `bson:"latest_version,omitempty`
+// DatasetLinks represents a list of specific links related to the dataset resource
+type DatasetLinks struct {
+	LatestVersion *LinkObject `bson:"latest_version,omitempty"  json:"latest_version,omitempty"`
 }
 
-type linkObject struct {
-	href string `bson:"href,omitempty`
+// LinkObject represents a generic structure for all links
+type LinkObject struct {
+	HRef string `bson:"href,omitempty"  json:"href,omitempty"`
+}
+
+type QMIObject struct {
+	HRef string `bson:"href,omitempty"  json:"href,omitempty"`
 }
 
 // getDatasets retrieves all dataset documents
@@ -196,28 +225,4 @@ func writeToFile(line string) error {
 	}
 
 	return nil
-}
-
-// DatasetUpdate represents an evolving dataset with the current dataset and the updated dataset
-type DatasetUpdate struct {
-	ID      string   `bson:"_id,omitempty"         json:"id,omitempty"`
-	Current *Dataset `bson:"current,omitempty"     json:"current,omitempty"`
-}
-
-// Dataset represents information related to a single dataset
-type Dataset struct {
-	Description string        `bson:"description,omitempty"            json:"description,omitempty"`
-	ID          string        `bson:"_id,omitempty"                    json:"id,omitempty"`
-	Links       *DatasetLinks `bson:"links,omitempty"                  json:"links,omitempty"`
-	Title       string        `bson:"title,omitempty"                  json:"title,omitempty"`
-}
-
-// DatasetLinks represents a list of specific links related to the dataset resource
-type DatasetLinks struct {
-	LatestVersion *LinkObject `bson:"latest_version,omitempty"  json:"latest_version,omitempty"`
-}
-
-// LinkObject represents a generic structure for all links
-type LinkObject struct {
-	HRef string `bson:"href,omitempty"  json:"href,omitempty"`
 }

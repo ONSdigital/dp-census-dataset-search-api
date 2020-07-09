@@ -7,6 +7,7 @@ import (
 	"errors"
 	"flag"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"os"
 
@@ -19,10 +20,15 @@ const (
 	defaultDatasetIndex        = "dataset-test"
 	defaultElasticsearchAPIURL = "http://localhost:9200"
 	defaultFilename            = "datasets.csv"
+	defaultTaxonomyFile        = "../taxonomy/taxonomy.json"
 	mappingsFile               = "dataset-mappings.json"
 )
 
-var datasetIndex, elasticsearchAPIURL, filename string
+var (
+	datasetIndex, elasticsearchAPIURL, filename, taxonomyFilename string
+	taxonomy                                                      Taxonomy
+	topicLevels                                                   = make(map[string]TopicLevels)
+)
 
 // Dataset represents the data stored against a resource in elasticsearch index
 type Dataset struct {
@@ -30,6 +36,26 @@ type Dataset struct {
 	Description string `json:"description"`
 	Link        string `json:"link"`
 	Title       string `json:"title"`
+	Topic1      string `json:"topic1,omitempty"`
+	Topic2      string `json:"topic2,omitempty"`
+	Topic3      string `json:"topic3,omitempty"`
+}
+
+// Taxonomy ...
+type Taxonomy struct {
+	Topics []Topic `json:"topics"`
+}
+
+type Topic struct {
+	Title          string  `json:"title"`
+	FormattedTitle string  `json:"formatted_title"`
+	ChildTopics    []Topic `json:"child_topics,omitempty"`
+}
+
+type TopicLevels struct {
+	TopicLevel1 string
+	TopicLevel2 string
+	TopicLevel3 string
 }
 
 func main() {
@@ -37,6 +63,7 @@ func main() {
 	flag.StringVar(&datasetIndex, "dataset-index", defaultDatasetIndex, "the elasticsearch index that datasets will be uploaded to")
 	flag.StringVar(&elasticsearchAPIURL, "elasticsearch-url", defaultElasticsearchAPIURL, "the elasticsearch url")
 	flag.StringVar(&filename, "filename", defaultFilename, "the csv filename that contains data to upload to elasticsearch")
+	flag.StringVar(&taxonomyFilename, "taxonomy-filename", defaultTaxonomyFile, "the file locataion and name that contains the taxonomy hierarchy")
 	flag.Parse()
 
 	if datasetIndex == "" {
@@ -51,10 +78,48 @@ func main() {
 		filename = defaultFilename
 	}
 
-	log.Event(ctx, "script variables", log.INFO, log.Data{"dataset_index": datasetIndex, "elasticsearch_api_url": elasticsearchAPIURL, "filename": filename})
+	if taxonomyFilename == "" {
+		taxonomyFilename = defaultTaxonomyFile
+	}
+
+	log.Event(ctx, "script variables", log.INFO, log.Data{"dataset_index": datasetIndex, "elasticsearch_api_url": elasticsearchAPIURL, "filename": filename, "taxonomy-file": taxonomyFilename})
 
 	cli := dphttp.NewClient()
 	esAPI := es.NewElasticSearchAPI(cli, elasticsearchAPIURL)
+
+	// Read in Taxonomy into memory
+	taxonomyFile, err := ioutil.ReadFile(taxonomyFilename)
+	if err != nil {
+		log.Event(ctx, "failed to read taxonomy file", log.ERROR, log.Error(err), log.Data{"taxonomy_filename": taxonomyFilename})
+		os.Exit(1)
+	}
+
+	if err = json.Unmarshal([]byte(taxonomyFile), &taxonomy); err != nil {
+		log.Event(ctx, "unable to unmarshal taxonomy into struct", log.ERROR, log.Error(err), log.Data{"taxonomy_filename": taxonomyFilename})
+		os.Exit(1)
+	}
+
+	// Invert taxonomy so each topic has a list of parent topics and store in map
+	for _, topic := range taxonomy.Topics {
+		topicLevels[topic.FormattedTitle] = TopicLevels{
+			TopicLevel1: topic.FormattedTitle,
+		}
+
+		for _, topic2 := range topic.ChildTopics {
+			topicLevels[topic2.FormattedTitle] = TopicLevels{
+				TopicLevel1: topic.FormattedTitle,
+				TopicLevel2: topic2.FormattedTitle,
+			}
+
+			for _, topic3 := range topic2.ChildTopics {
+				topicLevels[topic3.FormattedTitle] = TopicLevels{
+					TopicLevel1: topic.FormattedTitle,
+					TopicLevel2: topic2.FormattedTitle,
+					TopicLevel3: topic3.FormattedTitle,
+				}
+			}
+		}
+	}
 
 	// delete existing elasticsearch index if already exists
 	status, err := esAPI.DeleteSearchIndex(ctx, datasetIndex)
@@ -126,6 +191,18 @@ func uploadDocs(ctx context.Context, esAPI *es.API, indexName, filename string) 
 			Title:       row[headerIndex["title"]],
 		}
 
+		topic := row[headerIndex["topic"]]
+		if topic != "" {
+			log.Event(ctx, "topic?", log.Data{"topic": topic})
+			// find topic hierarchy - using taxonomy map
+			taxonomy := topicLevels[topic]
+
+			datasetDoc.Topic1 = taxonomy.TopicLevel1
+			datasetDoc.Topic2 = taxonomy.TopicLevel2
+			datasetDoc.Topic3 = taxonomy.TopicLevel3
+			log.Event(ctx, "dataset?", log.Data{"datasets": datasetDoc})
+		}
+
 		bytes, err := json.Marshal(datasetDoc)
 		if err != nil {
 			log.Event(ctx, "failed to marshal dataset document to bytes", log.ERROR, log.Error(err), log.Data{"count": count})
@@ -147,6 +224,7 @@ var validHeaders = map[string]bool{
 	"description": true,
 	"ons-link":    true,
 	"title":       true,
+	"topic":       true,
 }
 
 func check(headerRow []string) (map[string]int, error) {
@@ -155,6 +233,7 @@ func check(headerRow []string) (map[string]int, error) {
 		"description": false,
 		"ons-link":    false,
 		"title":       false,
+		"topic":       false,
 	}
 
 	if len(headerRow) < 1 {
