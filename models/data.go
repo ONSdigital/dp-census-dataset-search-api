@@ -29,6 +29,9 @@ type SearchResult struct {
 	Alias       string  `json:"alias,omitempty"`
 	Description string  `json:"description,omitempty"`
 	Title       string  `json:"title,omitempty"`
+	Topic1      string  `json:"topic1,omitempty"`
+	Topic2      string  `json:"topic2,omitempty"`
+	Topic3      string  `json:"topic3,omitempty"`
 	Link        string  `json:"link,omitempty"`
 	Matches     Matches `json:"matches,omitempty"`
 }
@@ -38,4 +41,7 @@ type Matches struct {
 	Alias       []string `json:"alias,omitempty"`
 	Description []string `json:"description,omitempty"`
 	Title       []string `json:"title,omitempty"`
+	Topic1      []string `json:"topic1,omitempty"`
+	Topic2      []string `json:"topic2,omitempty"`
+	Topic3      []string `json:"topic3,omitempty"`
 }
