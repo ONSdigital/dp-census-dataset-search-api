@@ -124,6 +124,15 @@ components:
         title:
           type: string
           description: "The name in which the dataset is known."
+        topic1:
+          type: string
+          description: "Level 1 topic that the dataset relates to."
+        topic2:
+          type: string
+          description: "Level 2 topic that the dataset relates to."
+        topic3:
+          type: string
+          description: "Level 3 topic that the dataset relates to."
         matches:
           $ref: '#/components/schemas/Matches'
     Matches:
@@ -138,6 +147,15 @@ components:
           type: string
         title:
           description: "Highlighted title field due to matched pieces of text."
+          type: string
+        topic1:
+          description: "Highlighted level 1 topic field due to query term matching keyword."
+          type: string
+        topic2:
+          description: "Highlighted level 2 topic field due to query term matching keyword."
+          type: string
+        topic3:
+          description: "Highlighted level 3 topic field due to query term matching keyword."
           type: string
   responses:
     InvalidRequestError:
