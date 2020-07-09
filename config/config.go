@@ -7,7 +7,7 @@ import (
 // Config is the filing resource handler config
 type Config struct {
 	BindAddr                  string `envconfig:"BIND_ADDR"                  json:"-"`
-	DatasetIndex              string `envconfig:"DATASET_INDEX"`
+	DatasetIndex              string `envconfig:"DATASET_SEARCH_INDEX"`
 	ElasticSearchAPIURL       string `envconfig:"ELASTIC_SEARCH_URL"         json:"-"`
 	MaxSearchResultsOffset    int    `envconfig:"MAX_SEARCH_RESULTS_OFFSET"`
 	SignElasticsearchRequests bool   `envconfig:"SIGN_ELASTICSEARCH_REQUESTS"`
