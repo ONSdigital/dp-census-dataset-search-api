@@ -66,11 +66,11 @@ func callONSWebite(ctx context.Context, url string) (*models.Taxonomy, error) {
 	logData := log.Data{"url": url}
 
 	resp, err := http.Get(url + "/data")
-	defer resp.Body.Close()
 	if err != nil {
 		log.Event(ctx, "request to ons website failed", log.ERROR, log.Error(err), logData)
 		return nil, err
 	}
+	defer resp.Body.Close()
 
 	topTaxonomy, err := CreateFirstLevelTaxonomy(ctx, resp.Body)
 	if err != nil {
@@ -150,11 +150,11 @@ func GetTopics(ctx context.Context, url, parentTopic string, level int) (*models
 	logData := log.Data{"url": extendedURL}
 
 	resp, err := http.Get(extendedURL)
-	defer resp.Body.Close()
 	if err != nil {
 		log.Event(ctx, "GetTopics: unsuccessful request", log.ERROR, log.Error(err), logData)
 		return nil, err
 	}
+	defer resp.Body.Close()
 
 	if resp.StatusCode == 404 {
 		log.Event(ctx, "got a not found page", log.WARN, logData)
