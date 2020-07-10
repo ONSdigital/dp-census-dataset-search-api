@@ -21,6 +21,7 @@ paths:
       - $ref: '#/components/parameters/q'
       - $ref: '#/components/parameters/limit'
       - $ref: '#/components/parameters/offset'
+      - $ref: '#/components/parameters/topics'
       responses:
         200:
           description: "A json list containing search results of datasets which are relevant to the search term"
@@ -82,6 +83,12 @@ components:
         type: integer
         minimum: 0
         default: 0
+    topics:
+      name: topics
+      description: "A comma separated list of a maximum of 10 separate topics to filter the dataset search API against topic fields, topic1, topic2 and topic3. Filtering across the levels is not recommended and will likely result in there being no results being returned."
+      in: query
+      schema:
+        type: string
   schemas:
     Datasets:
       description: "The resulting resource of the completed search against a dimension hierarchy."
