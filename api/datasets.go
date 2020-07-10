@@ -17,6 +17,7 @@ const (
 
 	internalError         = "internal server error"
 	exceedsDefaultMaximum = "the maximum offset has been reached, the offset cannot be more than"
+	topicFilterError      = "invalid list of topics to filter by"
 )
 
 func (api *SearchAPI) getDatasets(w http.ResponseWriter, r *http.Request) {
@@ -33,11 +34,13 @@ func (api *SearchAPI) getDatasets(w http.ResponseWriter, r *http.Request) {
 	q := r.FormValue("q")
 	requestedLimit := r.FormValue("limit")
 	requestedOffset := r.FormValue("offset")
+	topics := r.FormValue("topics")
 
 	logData := log.Data{
 		"query_term":       q,
 		"requested_limit":  requestedLimit,
 		"requested_offset": requestedOffset,
+		"topics":           topics,
 	}
 
 	log.Event(ctx, "getDatasets endpoint: incoming request", log.INFO, logData)
@@ -86,10 +89,17 @@ func (api *SearchAPI) getDatasets(w http.ResponseWriter, r *http.Request) {
 	logData["limit"] = page.Limit
 	logData["offset"] = page.Offset
 
+	topicFilters, err := models.ValidateTopics(topics)
+	if err != nil {
+		log.Event(ctx, "getDatasets endpoint: validate filter by topics", log.ERROR, log.Error(err), logData)
+		setErrorCode(w, err)
+		return
+	}
+
 	log.Event(ctx, "getDatasets endpoint: just before querying search index", log.INFO, logData)
 
 	// build dataset search query
-	query := buildSearchQuery(term, limit, offset)
+	query := buildSearchQuery(term, topicFilters, limit, offset)
 
 	response, status, err := api.elasticsearch.QueryGeoLocation(ctx, api.datasetIndex, query, limit, offset)
 	if err != nil {
@@ -144,62 +154,16 @@ func setErrorCode(w http.ResponseWriter, err error) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	case strings.Contains(err.Error(), exceedsDefaultMaximum):
 		http.Error(w, err.Error(), http.StatusBadRequest)
+	case strings.Contains(err.Error(), topicFilterError):
+		http.Error(w, err.Error(), http.StatusBadRequest)
 	default:
 		http.Error(w, internalError, http.StatusInternalServerError)
 	}
 }
 
-// Body represents the request body to elasticsearch
-type Body struct {
-	From      int        `json:"from"`
-	Size      int        `json:"size"`
-	Highlight *Highlight `json:"highlight,omitempty"`
-	Query     Query      `json:"query"`
-	Sort      []Scores   `json:"sort"`
-	TotalHits bool       `json:"track_total_hits"`
-}
-
-// Highlight represents parts of the fields that matched
-type Highlight struct {
-	PreTags  []string          `json:"pre_tags,omitempty"`
-	PostTags []string          `json:"post_tags,omitempty"`
-	Fields   map[string]Object `json:"fields,omitempty"`
-	Order    string            `json:"score,omitempty"`
-}
-
-// Object represents an empty object (as expected by elasticsearch)
-type Object struct{}
-
-// Query represents the request query details
-type Query struct {
-	Bool Bool `json:"bool"`
-}
-
-// Bool represents the desirable goals for query
-type Bool struct {
-	Must   []Match `json:"must,omitempty"`
-	Should []Match `json:"should,omitempty"`
-}
-
-// Match represents the fields that the term should or must match within query
-type Match struct {
-	Match map[string]string `json:"match,omitempty"`
-}
-
-// Scores represents a list of scoring, e.g. scoring on relevance, but can add in secondary
-// score such as alphabetical order if relevance is the same for two search results
-type Scores struct {
-	Score Score `json:"_score"`
-}
-
-// Score contains the ordering of the score (ascending or descending)
-type Score struct {
-	Order string `json:"order"`
-}
-
-func buildSearchQuery(term string, limit, offset int) interface{} {
-	var object Object
-	highlight := make(map[string]Object)
+func buildSearchQuery(term string, topicFilters []models.Filter, limit, offset int) interface{} {
+	var object models.Object
+	highlight := make(map[string]models.Object)
 
 	highlight["alias"] = object
 	highlight["description"] = object
@@ -221,50 +185,50 @@ func buildSearchQuery(term string, limit, offset int) interface{} {
 	topic2["topic2"] = term
 	topic3["topic3"] = term
 
-	aliasMatch := Match{
+	aliasMatch := models.Match{
 		Match: alias,
 	}
 
-	descriptionMatch := Match{
+	descriptionMatch := models.Match{
 		Match: description,
 	}
 
-	titleMatch := Match{
+	titleMatch := models.Match{
 		Match: title,
 	}
 
-	topic1Match := Match{
+	topic1Match := models.Match{
 		Match: topic1,
 	}
 
-	topic2Match := Match{
+	topic2Match := models.Match{
 		Match: topic2,
 	}
 
-	topic3Match := Match{
+	topic3Match := models.Match{
 		Match: topic3,
 	}
 
-	scores := Scores{
-		Score: Score{
+	scores := models.Scores{
+		Score: models.Score{
 			Order: "desc",
 		},
 	}
 
-	listOfScores := []Scores{}
+	listOfScores := []models.Scores{}
 	listOfScores = append(listOfScores, scores)
 
-	query := &Body{
+	query := &models.Body{
 		From: offset,
 		Size: limit,
-		Highlight: &Highlight{
+		Highlight: &models.Highlight{
 			PreTags:  []string{"<b><em>"},
 			PostTags: []string{"</em></b>"},
 			Fields:   highlight,
 		},
-		Query: Query{
-			Bool: Bool{
-				Should: []Match{
+		Query: models.Query{
+			Bool: models.Bool{
+				Should: []models.Match{
 					aliasMatch,
 					descriptionMatch,
 					titleMatch,
@@ -276,6 +240,10 @@ func buildSearchQuery(term string, limit, offset int) interface{} {
 		},
 		Sort:      listOfScores,
 		TotalHits: true,
+	}
+
+	if topicFilters != nil {
+		query.Query.Bool.Filter = topicFilters
 	}
 
 	return query

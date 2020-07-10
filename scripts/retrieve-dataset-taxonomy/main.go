@@ -36,6 +36,8 @@ type Topic struct {
 	ChildTopics    []Topic `json:"child_topics,omitempty"`
 }
 
+var topicList = make(map[string]int)
+
 func main() {
 	flag.StringVar(&filename, "filename", defaultFilename, "the name and path of the file location to create file")
 	flag.Parse()
@@ -87,7 +89,7 @@ func callONSWebite(ctx context.Context, url string) (*Taxonomy, error) {
 	var topics []Topic
 	for _, section := range topTaxonomy.Sections {
 
-		topic, err := GetTopics(ctx, url, section.Theme.URI)
+		topic, err := GetTopics(ctx, url, section.Theme.URI, 1)
 		if err != nil {
 			return nil, err
 		}
@@ -102,7 +104,7 @@ func callONSWebite(ctx context.Context, url string) (*Taxonomy, error) {
 		Topics: topics,
 	}
 
-	// log.Event(ctx, "data", log.INFO, log.Data{"top_taxonomy": taxonomy})
+	log.Event(ctx, "data", log.INFO, log.Data{"top_list": topicList})
 
 	return &taxonomy, nil
 }
@@ -152,7 +154,7 @@ type ChildSection struct {
 	URI string `json:"uri`
 }
 
-func GetTopics(ctx context.Context, url, parentTopic string) (*Topic, error) {
+func GetTopics(ctx context.Context, url, parentTopic string, level int) (*Topic, error) {
 	extendedURL := onsWebsite + parentTopic + "/data"
 	logData := log.Data{"url": extendedURL}
 
@@ -184,7 +186,7 @@ func GetTopics(ctx context.Context, url, parentTopic string) (*Topic, error) {
 	var topics []Topic
 	if childTaxonomy.Type == taxonomyLandingPage {
 		for _, section := range childTaxonomy.Sections {
-			topic, err := GetTopics(ctx, extendedURL, section.URI)
+			topic, err := GetTopics(ctx, extendedURL, section.URI, level+1)
 			if err != nil {
 				log.Event(ctx, "GetTopics: request to ons website failed", log.ERROR, log.Error(err), logData)
 				return nil, err
@@ -206,6 +208,8 @@ func GetTopics(ctx context.Context, url, parentTopic string) (*Topic, error) {
 		FormattedTitle: formattedTitle,
 		ChildTopics:    topics,
 	}
+
+	topicList[formattedTitle] = level
 
 	return &topic, nil
 }
