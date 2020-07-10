@@ -57,6 +57,88 @@ paths:
               example: 86400
         500:
           $ref: '#/components/responses/InternalError'
+  /taxonomy:
+    get:
+      tags:
+      - "Public"
+      summary: "Returns a nested hierarchy of topics known as taxonomy"
+      responses:
+        200:
+          description: "A json list o topics broken down into 3 levels of hierarchy."
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Taxonomy'
+        500:
+          $ref: '#/components/responses/InternalError'
+    options:
+      tags:
+      - "Public"
+      summary: "Information about the communication options available for the target resource"
+      responses:
+        204:
+          description: "No Content"
+          headers:
+            Access-Control-Allow-Methods:
+              schema:
+                type: string
+              description: "The methods allowed access against this resource as a comma separated list."
+            Access-Control-Allow-Origin:
+              schema:
+                type: string
+              description: "The web urls allowed access against this resource as a comma separated list."
+              example: "*"
+            Access-Control-Max-Age:
+              schema:
+                type: integer
+              description: "Header indicates how long the results of a preflight request can be cached."
+              example: 86400
+        500:
+          $ref: '#/components/responses/InternalError'
+  /taxonomy/{topic}:
+    get:
+      tags:
+      - "Public"
+      summary: "Returns a single topic resource with data on related parent and child topic resources within the taxonomy."
+      parameters:
+      - $ref: '#/components/parameters/topic'
+      responses:
+        200:
+          description: "A json list o topics broken down into 3 levels of hierarchy."
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Topic'
+        400:
+          $ref: '#/components/responses/InvalidRequestError'
+        500:
+          $ref: '#/components/responses/InternalError'
+    options:
+      tags:
+      - "Public"
+      summary: "Information about the communication options available for the target resource"
+      parameters:
+      - $ref: '#/components/parameters/topic'
+      responses:
+        204:
+          description: "No Content"
+          headers:
+            Access-Control-Allow-Methods:
+              schema:
+                type: string
+              description: "The methods allowed access against this resource as a comma separated list."
+            Access-Control-Allow-Origin:
+              schema:
+                type: string
+              description: "The web urls allowed access against this resource as a comma separated list."
+              example: "*"
+            Access-Control-Max-Age:
+              schema:
+                type: integer
+              description: "Header indicates how long the results of a preflight request can be cached."
+              example: 86400
+        500:
+          $ref: '#/components/responses/InternalError'
 components:
   parameters:
     q:
@@ -87,6 +169,13 @@ components:
       name: topics
       description: "A comma separated list of a maximum of 10 separate topics to filter the dataset search API against topic fields, topic1, topic2 and topic3. Filtering across the levels is not recommended and will likely result in there being no results being returned."
       in: query
+      schema:
+        type: string
+    topic:
+      name: topic
+      description: "A single topic name"
+      required: true
+      in: path
       schema:
         type: string
   schemas:
@@ -164,6 +253,76 @@ components:
         topic3:
           description: "Highlighted level 3 topic field due to query term matching keyword."
           type: string
+    Taxonomy:
+      type: object
+      properties:
+        topics:
+          description: ""
+          type: array
+          items:
+            $ref: '#/components/schemas/Topics'
+    Topics:
+      type: object
+      required: [
+        title,
+        filterable_title
+      ]
+      properties:
+        title:
+          description: "A human friendly title of a topic at the highest level of the taxonomy, level 1."
+          type: string
+        filterable_title:
+          description: "A separate formatted title that has removed all whitespace and grammar to allow better filtering and searching against a topic title."
+          type: string
+        child_topics:
+          description: "A list of level 2 topics that are related to this topic in the taxonomy hierarchy."
+          type: array
+          items:
+            $ref: '#/components/schemas/ChildTopics'
+    ChildTopics:
+      type: object
+      properties:
+        title:
+          description: "A human friendly title of a topic at the highest level of the taxonomy, level 2."
+          type: string
+        filterable_title:
+          description: "A separate formatted title that has removed all whitespace and grammar to allow better filtering and searching against a topic title."
+          type: string
+        child_topics:
+          description: "A list of level 3 topics that are related to this topic in the taxonomy hierarchy."
+          type: array
+          items:
+            $ref: '#/components/schemas/GrandchildTopics'
+    GrandchildTopics:
+      type: object
+      properties:
+        title:
+          description: "A human friendly title of a topic at the highest level of the taxonomy, level 3."
+          type: string
+        filterable_title:
+          description: "A separate formatted title that has removed all whitespace and grammar to allow better filtering and searching against a topic title."
+          type: string
+    Topic:
+      type: object
+      required: [
+        title,
+        topic
+      ]
+      properties:
+        parent_topic:
+          description: "The parent topic of this topic resource that the topic relates to in the taxonomy."
+          type: string
+        title:
+          description: "A human friendly title of the topic."
+          type: string
+        topic:
+          description: "Same as the title but has all whitespace and grammar removed to allow better filtering and searching against a topic."
+          type: string
+        child_topics:
+          description: "A list of child topics that this topic resource relates to in the taxonomy."
+          type: array
+          items:
+            type: string
   responses:
     InvalidRequestError:
       description: "Failed to process the request due to invalid request."
