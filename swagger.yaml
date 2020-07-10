@@ -109,8 +109,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Topic'
-        400:
-          $ref: '#/components/responses/InvalidRequestError'
+        404:
+          $ref: '#/components/responses/NotFoundError'
         500:
           $ref: '#/components/responses/InternalError'
     options:
@@ -328,3 +328,5 @@ components:
       description: "Failed to process the request due to invalid request."
     InternalError:
       description: "Failed to process the request due to an internal error."
+    NotFoundError:
+      description: "Failed to find resource."

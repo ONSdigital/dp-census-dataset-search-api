@@ -85,6 +85,13 @@ func (api *SearchAPI) getTopic(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	if !hasValidTopic {
+		err := errs.ErrTopicNotFound
+		log.Event(ctx, "getTopic endpoint: failed to marshal search resource into bytes", log.ERROR, log.Error(err), logData)
+		setErrorCode(w, err)
+		return
+	}
+
 	b, err := json.Marshal(result)
 	if err != nil {
 		log.Event(ctx, "getTopic endpoint: failed to marshal search resource into bytes", log.ERROR, log.Error(err), logData)

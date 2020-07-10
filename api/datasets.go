@@ -106,6 +106,7 @@ func (api *SearchAPI) getDatasets(w http.ResponseWriter, r *http.Request) {
 		logData["elasticsearch_status"] = status
 		log.Event(ctx, "getDatasets endpoint: failed to get search results", log.ERROR, log.Error(err), logData)
 		setErrorCode(w, err)
+		return
 	}
 
 	searchResults := &models.SearchResults{
@@ -127,6 +128,7 @@ func (api *SearchAPI) getDatasets(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Event(ctx, "getDatasets endpoint: failed to marshal search resource into bytes", log.ERROR, log.Error(err), logData)
 		setErrorCode(w, errs.ErrInternalServer)
+		return
 	}
 
 	_, err = w.Write(b)
