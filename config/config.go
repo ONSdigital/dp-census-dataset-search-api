@@ -11,6 +11,7 @@ type Config struct {
 	ElasticSearchAPIURL       string `envconfig:"ELASTIC_SEARCH_URL"         json:"-"`
 	MaxSearchResultsOffset    int    `envconfig:"MAX_SEARCH_RESULTS_OFFSET"`
 	SignElasticsearchRequests bool   `envconfig:"SIGN_ELASTICSEARCH_REQUESTS"`
+	TaxonomyFilename          string `envconfig:"TAXONOMY_FILENAME"`
 }
 
 var cfg *Config
@@ -27,6 +28,7 @@ func Get() (*Config, error) {
 		ElasticSearchAPIURL:       "http://localhost:9200",
 		MaxSearchResultsOffset:    1000,
 		SignElasticsearchRequests: false,
+		TaxonomyFilename:          "taxonomy/taxonomy.json",
 	}
 
 	return cfg, envconfig.Process("", cfg)

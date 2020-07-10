@@ -11,6 +11,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/ONSdigital/dp-census-dataset-search-api/models"
 	"github.com/ONSdigital/log.go/log"
 )
 
@@ -26,15 +27,7 @@ var (
 	defaultFilename = "../taxonomy/taxonomy.json"
 )
 
-type Taxonomy struct {
-	Topics []Topic `json:"topics"`
-}
-
-type Topic struct {
-	Title          string  `json:"title"`
-	FormattedTitle string  `json:"formatted_title"`
-	ChildTopics    []Topic `json:"child_topics,omitempty"`
-}
+var topicList = make(map[string]int)
 
 func main() {
 	flag.StringVar(&filename, "filename", defaultFilename, "the name and path of the file location to create file")
@@ -68,7 +61,7 @@ func main() {
 	}
 }
 
-func callONSWebite(ctx context.Context, url string) (*Taxonomy, error) {
+func callONSWebite(ctx context.Context, url string) (*models.Taxonomy, error) {
 
 	logData := log.Data{"url": url}
 
@@ -84,10 +77,10 @@ func callONSWebite(ctx context.Context, url string) (*Taxonomy, error) {
 		return nil, err
 	}
 
-	var topics []Topic
+	var topics []models.Topic
 	for _, section := range topTaxonomy.Sections {
 
-		topic, err := GetTopics(ctx, url, section.Theme.URI)
+		topic, err := GetTopics(ctx, url, section.Theme.URI, 1)
 		if err != nil {
 			return nil, err
 		}
@@ -98,11 +91,11 @@ func callONSWebite(ctx context.Context, url string) (*Taxonomy, error) {
 		topics = append(topics, *topic)
 	}
 
-	taxonomy := Taxonomy{
+	taxonomy := models.Taxonomy{
 		Topics: topics,
 	}
 
-	// log.Event(ctx, "data", log.INFO, log.Data{"top_taxonomy": taxonomy})
+	log.Event(ctx, "data", log.INFO, log.Data{"top_list": topicList})
 
 	return &taxonomy, nil
 }
@@ -152,7 +145,7 @@ type ChildSection struct {
 	URI string `json:"uri`
 }
 
-func GetTopics(ctx context.Context, url, parentTopic string) (*Topic, error) {
+func GetTopics(ctx context.Context, url, parentTopic string, level int) (*models.Topic, error) {
 	extendedURL := onsWebsite + parentTopic + "/data"
 	logData := log.Data{"url": extendedURL}
 
@@ -181,10 +174,10 @@ func GetTopics(ctx context.Context, url, parentTopic string) (*Topic, error) {
 		return nil, errors.New("failed to parse json body")
 	}
 
-	var topics []Topic
+	var topics []models.Topic
 	if childTaxonomy.Type == taxonomyLandingPage {
 		for _, section := range childTaxonomy.Sections {
-			topic, err := GetTopics(ctx, extendedURL, section.URI)
+			topic, err := GetTopics(ctx, extendedURL, section.URI, level+1)
 			if err != nil {
 				log.Event(ctx, "GetTopics: request to ons website failed", log.ERROR, log.Error(err), logData)
 				return nil, err
@@ -201,11 +194,13 @@ func GetTopics(ctx context.Context, url, parentTopic string) (*Topic, error) {
 	title := strings.SplitAfter(parentTopic, "/")
 	formattedTitle := title[len(title)-1]
 
-	topic := Topic{
+	topic := models.Topic{
 		Title:          childTaxonomy.Description.Title,
 		FormattedTitle: formattedTitle,
 		ChildTopics:    topics,
 	}
+
+	topicList[formattedTitle] = level
 
 	return &topic, nil
 }

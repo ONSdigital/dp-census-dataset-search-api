@@ -12,6 +12,7 @@ import (
 	"os"
 
 	es "github.com/ONSdigital/dp-census-dataset-search-api/internal/elasticsearch"
+	"github.com/ONSdigital/dp-census-dataset-search-api/models"
 	dphttp "github.com/ONSdigital/dp-net/http"
 	"github.com/ONSdigital/log.go/log"
 )
@@ -26,7 +27,7 @@ const (
 
 var (
 	datasetIndex, elasticsearchAPIURL, filename, taxonomyFilename string
-	taxonomy                                                      Taxonomy
+	taxonomy                                                      models.Taxonomy
 	topicLevels                                                   = make(map[string]TopicLevels)
 )
 
@@ -41,17 +42,7 @@ type Dataset struct {
 	Topic3      string `json:"topic3,omitempty"`
 }
 
-// Taxonomy ...
-type Taxonomy struct {
-	Topics []Topic `json:"topics"`
-}
-
-type Topic struct {
-	Title          string  `json:"title"`
-	FormattedTitle string  `json:"formatted_title"`
-	ChildTopics    []Topic `json:"child_topics,omitempty"`
-}
-
+// TopicLevels represent the levels within the topic hierarchy (aka taxonomy)
 type TopicLevels struct {
 	TopicLevel1 string
 	TopicLevel2 string

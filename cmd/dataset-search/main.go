@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"encoding/json"
+	"io/ioutil"
 	"os"
 	"os/signal"
 	"syscall"
@@ -9,6 +11,7 @@ import (
 	"github.com/ONSdigital/dp-census-dataset-search-api/api"
 	"github.com/ONSdigital/dp-census-dataset-search-api/config"
 	es "github.com/ONSdigital/dp-census-dataset-search-api/internal/elasticsearch"
+	"github.com/ONSdigital/dp-census-dataset-search-api/models"
 	dphttp "github.com/ONSdigital/dp-net/http"
 	"github.com/ONSdigital/log.go/log"
 )
@@ -37,6 +40,20 @@ func run(ctx context.Context) error {
 
 	log.Event(ctx, "config on startup", log.INFO, log.Data{"config": cfg})
 
+	// Read in Taxonomy JSON into memory
+	taxonomyFile, err := ioutil.ReadFile(cfg.TaxonomyFilename)
+	if err != nil {
+		log.Event(ctx, "failed to read taxonomy file", log.ERROR, log.Error(err), log.Data{"taxonomy_filename": cfg.TaxonomyFilename})
+		return err
+	}
+
+	var taxonomy models.Taxonomy
+
+	if err = json.Unmarshal([]byte(taxonomyFile), &taxonomy); err != nil {
+		log.Event(ctx, "unable to unmarshal taxonomy into struct", log.ERROR, log.Error(err), log.Data{"taxonomy_filename": cfg.TaxonomyFilename})
+		return err
+	}
+
 	cli := dphttp.NewClient()
 	esAPI := es.NewElasticSearchAPI(cli, cfg.ElasticSearchAPIURL)
 
@@ -48,7 +65,7 @@ func run(ctx context.Context) error {
 
 	apiErrors := make(chan error, 1)
 
-	api.CreateAndInitialiseSearchAPI(ctx, cfg.BindAddr, esAPI, cfg.MaxSearchResultsOffset, cfg.DatasetIndex, apiErrors)
+	api.CreateAndInitialiseSearchAPI(ctx, cfg.BindAddr, esAPI, cfg.MaxSearchResultsOffset, cfg.DatasetIndex, taxonomy, apiErrors)
 
 	// block until a fatal error occurs
 	select {

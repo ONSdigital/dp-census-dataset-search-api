@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 
+	"github.com/ONSdigital/dp-census-dataset-search-api/models"
 	"github.com/ONSdigital/go-ns/server"
 	"github.com/ONSdigital/log.go/log"
 	"github.com/gorilla/mux"
@@ -16,10 +17,11 @@ type SearchAPI struct {
 	elasticsearch     Elasticsearcher
 	router            *mux.Router
 	datasetIndex      string
+	taxonomy          models.Taxonomy
 }
 
 // CreateAndInitialiseSearchAPI manages all the routes configured to API
-func CreateAndInitialiseSearchAPI(ctx context.Context, bindAddr string, esAPI Elasticsearcher, defaultMaxResults int, datasetIndex string, errorChan chan error) {
+func CreateAndInitialiseSearchAPI(ctx context.Context, bindAddr string, esAPI Elasticsearcher, defaultMaxResults int, datasetIndex string, taxonomy models.Taxonomy, errorChan chan error) {
 
 	router := mux.NewRouter()
 	routes(ctx,
@@ -27,6 +29,7 @@ func CreateAndInitialiseSearchAPI(ctx context.Context, bindAddr string, esAPI El
 		esAPI,
 		defaultMaxResults,
 		datasetIndex,
+		taxonomy,
 	)
 
 	httpServer = server.New(bindAddr, router)
@@ -47,16 +50,20 @@ func routes(ctx context.Context,
 	router *mux.Router,
 	elasticsearch Elasticsearcher,
 	defaultMaxResults int,
-	datasetIndex string) *SearchAPI {
+	datasetIndex string,
+	taxonomy models.Taxonomy) *SearchAPI {
 
 	api := SearchAPI{
 		defaultMaxResults: defaultMaxResults,
 		elasticsearch:     elasticsearch,
 		router:            router,
 		datasetIndex:      datasetIndex,
+		taxonomy:          taxonomy,
 	}
 
 	api.router.HandleFunc("/datasets", api.getDatasets).Methods("GET", "OPTIONS")
+	api.router.HandleFunc("/taxonomy", api.getTaxonomy).Methods("GET", "OPTIONS")
+	api.router.HandleFunc("/taxonomy/{topic}", api.getTopic).Methods("GET", "OPTIONS")
 
 	return &api
 }

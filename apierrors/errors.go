@@ -9,6 +9,7 @@ var (
 	ErrInternalServer         = errors.New("internal server error")
 	ErrMarshallingQuery       = errors.New("failed to marshal query to bytes for request body to send to elastic")
 	ErrParsingQueryParameters = errors.New("failed to parse query parameters, values must be an integer")
+	ErrTooManyTopicFilters    = errors.New("Too many topic filters, limited to a maximum of 10")
 	ErrUnmarshallingJSON      = errors.New("failed to parse json body")
 	ErrUnexpectedStatusCode   = errors.New("unexpected status code from elastic api")
 
@@ -17,5 +18,6 @@ var (
 	BadRequestMap = map[error]bool{
 		ErrEmptySearchTerm:        true,
 		ErrParsingQueryParameters: true,
+		ErrTooManyTopicFilters:    true,
 	}
 )
