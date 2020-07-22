@@ -77,18 +77,24 @@ func callONSWebite(ctx context.Context, url string) (*models.Taxonomy, error) {
 		return nil, err
 	}
 
+	// handle duplicate top level topics
+	topLevelTopics := make(map[string]bool)
+
 	var topics []models.Topic
 	for _, section := range topTaxonomy.Sections {
 
-		topic, err := GetTopics(ctx, url, section.Theme.URI, 1)
-		if err != nil {
-			return nil, err
-		}
+		if !topLevelTopics[section.Theme.URI] {
+			topLevelTopics[section.Theme.URI] = true
+			topic, err := GetTopics(ctx, url, section.Theme.URI, 1)
+			if err != nil {
+				return nil, err
+			}
 
-		if topic == nil {
-			continue
+			if topic == nil {
+				continue
+			}
+			topics = append(topics, *topic)
 		}
-		topics = append(topics, *topic)
 	}
 
 	taxonomy := models.Taxonomy{
