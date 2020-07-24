@@ -119,6 +119,20 @@ func (api *SearchAPI) getDatasets(w http.ResponseWriter, r *http.Request) {
 
 		doc := result.Source
 		doc.Matches = result.Matches
+
+		// Retrieve inner hit matches
+		if result.InnerHits.Dimensions.Hits.Hits != nil {
+			for _, hit := range result.InnerHits.Dimensions.Hits.Hits {
+				if hit.Matches.DimensionLabel != nil {
+					doc.Matches.DimensionLabel = hit.Matches.DimensionLabel
+				}
+
+				if hit.Matches.DimensionName != nil {
+					doc.Matches.DimensionName = hit.Matches.DimensionName
+				}
+			}
+		}
+
 		searchResults.Items = append(searchResults.Items, doc)
 	}
 
@@ -166,6 +180,7 @@ func setErrorCode(w http.ResponseWriter, err error) {
 func buildSearchQuery(term string, topicFilters []models.Filter, limit, offset int) interface{} {
 	var object models.Object
 	highlight := make(map[string]models.Object)
+	innerHighlight := make(map[string]models.Object)
 
 	highlight["alias"] = object
 	highlight["description"] = object
@@ -173,6 +188,8 @@ func buildSearchQuery(term string, topicFilters []models.Filter, limit, offset i
 	highlight["topic1"] = object
 	highlight["topic2"] = object
 	highlight["topic3"] = object
+	innerHighlight["dimensions.label"] = object
+	innerHighlight["dimensions.name"] = object
 
 	// Nested fields like dimensions in the dataset resource cannot be highlighted by es due to being a nested type
 	// Instead this could be done within the API but result in a performance hit or we store the dimension values in the root document
@@ -246,17 +263,21 @@ func buildSearchQuery(term string, topicFilters []models.Filter, limit, offset i
 					topic3Match,
 					{
 						Nested: &models.Nested{
-							Path: "dimensions",
-							Query: models.NestedQuery{
-								Term: dimensionLabels,
+							InnerHits: &models.InnerHits{
+								Hightlight: &models.Highlight{
+									Fields:   innerHighlight,
+									PreTags:  []string{"<b><em>"},
+									PostTags: []string{"</em></b>"},
+								},
 							},
-						},
-					},
-					{
-						Nested: &models.Nested{
 							Path: "dimensions",
-							Query: models.NestedQuery{
-								Term: dimensionNames,
+							Query: []models.NestedQuery{
+								{
+									Term: dimensionLabels,
+								},
+								{
+									Term: dimensionNames,
+								},
 							},
 						},
 					},

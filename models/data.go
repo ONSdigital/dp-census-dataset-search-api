@@ -10,9 +10,26 @@ type Hits struct {
 }
 
 type HitList struct {
-	Score   float64      `json:"_score"`
-	Source  SearchResult `json:"_source"`
-	Matches Matches      `json:"highlight,omitempty"`
+	Score     float64           `json:"_score"`
+	Source    SearchResult      `json:"_source"`
+	Matches   Matches           `json:"highlight,omitempty"`
+	InnerHits ResponseInnerHits `json:"inner_hits,omitempty"`
+}
+
+type ResponseInnerHits struct {
+	Dimensions Dimensions `json:"dimensions,omitempty"`
+}
+
+type Dimensions struct {
+	Hits DimensionHits `json:"hits,omitempty"`
+}
+
+type DimensionHits struct {
+	Hits []DimensionHitList `json:"hits,omitempty"`
+}
+
+type DimensionHitList struct {
+	Matches Matches `json:"highlight,omitempty"`
 }
 
 // SearchResults represents a structure for a list of returned objects
@@ -45,12 +62,12 @@ type Dimension struct {
 
 // Matches represents a list of members and their arrays of character offsets that matched the search term
 type Matches struct {
-	Alias           []string `json:"alias,omitempty"`
-	Description     []string `json:"description,omitempty"`
-	DimensionLabels []string `json:"dimension_labels,omitempty"`
-	DimensionNames  []string `json:"dimension_names,omitempty"`
-	Title           []string `json:"title,omitempty"`
-	Topic1          []string `json:"topic1,omitempty"`
-	Topic2          []string `json:"topic2,omitempty"`
-	Topic3          []string `json:"topic3,omitempty"`
+	Alias          []string `json:"alias,omitempty"`
+	Description    []string `json:"description,omitempty"`
+	DimensionLabel []string `json:"dimensions.label,omitempty"`
+	DimensionName  []string `json:"dimensions.name,omitempty"`
+	Title          []string `json:"title,omitempty"`
+	Topic1         []string `json:"topic1,omitempty"`
+	Topic2         []string `json:"topic2,omitempty"`
+	Topic3         []string `json:"topic3,omitempty"`
 }

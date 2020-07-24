@@ -47,9 +47,14 @@ type Match struct {
 
 // Nested represents a nested query object
 type Nested struct {
-	Path string `json:"path,omitempty"`
-	// Query Query  `json:"query,omitempty"`
-	Query NestedQuery `json:"query,omitempty"`
+	InnerHits *InnerHits    `json:"inner_hits,omitempty"`
+	Path      string        `json:"path,omitempty"`
+	Query     []NestedQuery `json:"query,omitempty"`
+}
+
+// InnerHits represents metadata contained by nested (or inner objects)
+type InnerHits struct {
+	Hightlight *Highlight `json:"highlight,omitempty"`
 }
 
 // NestedQuery represents ...
