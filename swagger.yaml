@@ -214,6 +214,18 @@ components:
         description:
           type: string
           description: "A description of the dataset."
+        dimensions:
+          type: array
+          description: "A list of dimension objects that are represented in the dataset."
+          items:
+            type: object
+            properties:
+              label:
+                type: string
+                description: "A human friendly label for the dimension name."
+              name:
+                type: string
+                description: "The name of the dimension stored against a dataset. Use this value to filter a dimension when searching."
         link: 
           type: string
           description: "A link to the dataset on the ons website."

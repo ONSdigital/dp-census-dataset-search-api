@@ -41,7 +41,20 @@ type Filter struct {
 
 // Match represents the fields that the term should or must match within query
 type Match struct {
-	Match map[string]string `json:"match,omitempty"`
+	Match  map[string]string `json:"match,omitempty"`
+	Nested *Nested           `json:"nested,omitempty"`
+}
+
+// Nested represents a nested query object
+type Nested struct {
+	Path string `json:"path,omitempty"`
+	// Query Query  `json:"query,omitempty"`
+	Query NestedQuery `json:"query,omitempty"`
+}
+
+// NestedQuery represents ...
+type NestedQuery struct {
+	Term map[string]string `json:"term,omitempty"`
 }
 
 // Scores represents a list of scoring, e.g. scoring on relevance, but can add in secondary

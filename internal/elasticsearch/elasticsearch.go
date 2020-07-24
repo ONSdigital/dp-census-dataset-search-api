@@ -121,10 +121,8 @@ func (api *API) SingleRequest(ctx context.Context, indexName string, document in
 	return status, nil
 }
 
-// QueryGeoLocation ...
-// TODO - may want to generalise this, build query object before passing to this function as interface{}
-// and change function name to something like QuerySearchIndex?
-func (api *API) QueryGeoLocation(ctx context.Context, indexName string, query interface{}, limit, offset int) (*models.SearchResponse, int, error) {
+// QueryDatasetSearch ...
+func (api *API) QueryDatasetSearch(ctx context.Context, indexName string, query interface{}, limit, offset int) (*models.SearchResponse, int, error) {
 
 	path := api.url + "/" + indexName + "/_search"
 	logData := log.Data{"query": query, "path": path}
@@ -139,8 +137,14 @@ func (api *API) QueryGeoLocation(ctx context.Context, indexName string, query in
 	responseBody, status, err := api.CallElastic(ctx, path, "GET", bytes)
 	logData["status"] = status
 	if err != nil {
-		log.Event(ctx, "failed to call elasticsearch", log.ERROR, log.Error(err), logData)
-		return nil, status, errs.ErrIndexNotFound
+		if status >= 500 {
+			log.Event(ctx, "failed to call elasticsearch", log.ERROR, log.Error(err), logData)
+			return nil, status, errs.ErrIndexNotFound
+		}
+
+		logData["response"] = responseBody
+		log.Event(ctx, "unexpected response from elasticsearch index", log.ERROR, log.Error(err), logData)
+		return nil, status, errs.ErrBadSearchQuery
 	}
 
 	response := &models.SearchResponse{}

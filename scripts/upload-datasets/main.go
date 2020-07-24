@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"strings"
 
 	es "github.com/ONSdigital/dp-census-dataset-search-api/internal/elasticsearch"
 	"github.com/ONSdigital/dp-census-dataset-search-api/models"
@@ -20,7 +21,7 @@ import (
 const (
 	defaultDatasetIndex        = "dataset-test"
 	defaultElasticsearchAPIURL = "http://localhost:9200"
-	defaultFilename            = "datasets.csv"
+	defaultFilename            = "cmd-datasets.csv"
 	defaultTaxonomyFile        = "../taxonomy/taxonomy.json"
 	mappingsFile               = "dataset-mappings.json"
 )
@@ -33,13 +34,20 @@ var (
 
 // Dataset represents the data stored against a resource in elasticsearch index
 type Dataset struct {
-	Alias       string `json:"alias"`
-	Description string `json:"description"`
-	Link        string `json:"link"`
-	Title       string `json:"title"`
-	Topic1      string `json:"topic1,omitempty"`
-	Topic2      string `json:"topic2,omitempty"`
-	Topic3      string `json:"topic3,omitempty"`
+	Alias       string      `json:"alias"`
+	Description string      `json:"description"`
+	Dimensions  []Dimension `json:"dimensions"`
+	Link        string      `json:"link"`
+	Title       string      `json:"title"`
+	Topic1      string      `json:"topic1,omitempty"`
+	Topic2      string      `json:"topic2,omitempty"`
+	Topic3      string      `json:"topic3,omitempty"`
+}
+
+// Dimension is an object representing a single dimension
+type Dimension struct {
+	Label string `json:"label"`
+	Name  string `json:"name"`
 }
 
 // TopicLevels represent the levels within the topic hierarchy (aka taxonomy)
@@ -182,6 +190,27 @@ func uploadDocs(ctx context.Context, esAPI *es.API, indexName, filename string) 
 			Title:       row[headerIndex["title"]],
 		}
 
+		dimensionNames := row[headerIndex["dimension-names"]]
+		dimensionLabels := row[headerIndex["dimension-labels"]]
+
+		dn := strings.SplitN(dimensionNames, ":", -1)
+		dl := strings.SplitN(dimensionLabels, ":", -1)
+
+		if len(dn) != len(dl) {
+			log.Event(ctx, "dimensions labels and names do not match up, unequal length", log.WARN, log.Data{"row": count + 1, "dataset": datasetDoc.Title})
+			continue
+		}
+
+		var dimensions []Dimension
+		for i := 0; i < len(dn); i++ {
+			dimensions = append(dimensions, Dimension{
+				Label: dl[i],
+				Name:  dn[i],
+			})
+		}
+
+		datasetDoc.Dimensions = dimensions
+
 		topic := row[headerIndex["topic"]]
 		if topic != "" {
 			log.Event(ctx, "topic?", log.Data{"topic": topic})
@@ -211,20 +240,24 @@ func uploadDocs(ctx context.Context, esAPI *es.API, indexName, filename string) 
 }
 
 var validHeaders = map[string]bool{
-	"alias":       true,
-	"description": true,
-	"ons-link":    true,
-	"title":       true,
-	"topic":       true,
+	"alias":            true,
+	"description":      true,
+	"dimension-names":  true,
+	"dimension-labels": true,
+	"ons-link":         true,
+	"title":            true,
+	"topic":            true,
 }
 
 func check(headerRow []string) (map[string]int, error) {
 	hasHeaders := map[string]bool{
-		"alias":       false,
-		"description": false,
-		"ons-link":    false,
-		"title":       false,
-		"topic":       false,
+		"alias":            false,
+		"description":      false,
+		"dimension-names":  false,
+		"dimension-labels": false,
+		"ons-link":         false,
+		"title":            false,
+		"topic":            false,
 	}
 
 	if len(headerRow) < 1 {

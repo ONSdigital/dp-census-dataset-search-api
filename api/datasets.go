@@ -101,7 +101,7 @@ func (api *SearchAPI) getDatasets(w http.ResponseWriter, r *http.Request) {
 	// build dataset search query
 	query := buildSearchQuery(term, topicFilters, limit, offset)
 
-	response, status, err := api.elasticsearch.QueryGeoLocation(ctx, api.datasetIndex, query, limit, offset)
+	response, status, err := api.elasticsearch.QueryDatasetSearch(ctx, api.datasetIndex, query, limit, offset)
 	if err != nil {
 		logData["elasticsearch_status"] = status
 		log.Event(ctx, "getDatasets endpoint: failed to get search results", log.ERROR, log.Error(err), logData)
@@ -174,18 +174,25 @@ func buildSearchQuery(term string, topicFilters []models.Filter, limit, offset i
 	highlight["topic2"] = object
 	highlight["topic3"] = object
 
+	// Nested fields like dimensions in the dataset resource cannot be highlighted by es due to being a nested type
+	// Instead this could be done within the API but result in a performance hit or we store the dimension values in the root document
+
 	alias := make(map[string]string)
 	description := make(map[string]string)
 	title := make(map[string]string)
 	topic1 := make(map[string]string)
 	topic2 := make(map[string]string)
 	topic3 := make(map[string]string)
+	dimensionLabels := make(map[string]string)
+	dimensionNames := make(map[string]string)
 	alias["alias"] = term
 	description["description"] = term
 	title["title"] = term
 	topic1["topic1"] = term
 	topic2["topic2"] = term
 	topic3["topic3"] = term
+	dimensionLabels["dimensions.label"] = term
+	dimensionNames["dimensions.name"] = term
 
 	aliasMatch := models.Match{
 		Match: alias,
@@ -237,6 +244,22 @@ func buildSearchQuery(term string, topicFilters []models.Filter, limit, offset i
 					topic1Match,
 					topic2Match,
 					topic3Match,
+					{
+						Nested: &models.Nested{
+							Path: "dimensions",
+							Query: models.NestedQuery{
+								Term: dimensionLabels,
+							},
+						},
+					},
+					{
+						Nested: &models.Nested{
+							Path: "dimensions",
+							Query: models.NestedQuery{
+								Term: dimensionNames,
+							},
+						},
+					},
 				},
 			},
 		},

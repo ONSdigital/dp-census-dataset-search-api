@@ -6,10 +6,12 @@ import (
 	"flag"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/ONSdigital/log.go/log"
 	"github.com/globalsign/mgo"
+	"gopkg.in/mgo.v2/bson"
 )
 
 const (
@@ -71,11 +73,11 @@ func main() {
 		}
 	}
 
-	headerLine := "title,alias,description,topic,ons-link\n"
+	headerLine := "title,alias,description,topic,ons-link,dimension-names,dimension-labels\n"
 	writeToFile(headerLine)
 
 	for i, dataset := range datasets {
-		var url string
+		var url, edition string
 
 		// Check data exists on ons website as we are building links to that website
 		if dataset.Current != nil {
@@ -88,6 +90,9 @@ func main() {
 						fullPath := "/datasets" + endOfPath[0]
 						url = onsSite + fullPath
 
+						// Get edition
+						getEdition := strings.SplitAfter(endOfPath[0], "editions/")
+						edition = strings.TrimSuffix(getEdition[1], "/versions")
 						log.Event(context.Background(), "found dataset", log.INFO, log.Data{"index": i})
 
 						resp, err := http.Get(url)
@@ -130,7 +135,33 @@ func main() {
 			}
 		}
 
-		row := `"` + dataset.Current.Title + `",` + dataset.ID + `,"` + dataset.Current.Description + `","` + topic + `",` + url + "\n"
+		// Retrieve dataset dimensions by finding latest published instance of dataset
+		latestVersion := dataset.Current.Links.LatestVersion.ID
+
+		// Get latest dataset instance
+		instance, err := mongo.getDatasetInstance(ctx, dataset.ID, edition, latestVersion)
+		if err != nil {
+			log.Event(ctx, "unable to retrieve dataset instance from mongo db", log.ERROR, log.Error(err))
+			os.Exit(1)
+		}
+
+		var dimensionNames, dimensionLabels string
+		for i, dimension := range instance.Dimensions {
+			label := dimension.Label
+			if label == "" {
+				label = dimension.Name
+			}
+
+			if i == 0 {
+				dimensionNames = dimensionNames + dimension.Name
+				dimensionLabels = dimensionLabels + label
+			} else {
+				dimensionNames = dimensionNames + ":" + dimension.Name
+				dimensionLabels = dimensionLabels + ":" + label
+			}
+		}
+
+		row := `"` + dataset.Current.Title + `",` + dataset.ID + `,"` + dataset.Current.Description + `","` + topic + `",` + url + `,"` + dimensionNames + `","` + dimensionLabels + `"` + "\n"
 
 		writeToFile(row)
 	}
@@ -182,10 +213,26 @@ type DatasetLinks struct {
 // LinkObject represents a generic structure for all links
 type LinkObject struct {
 	HRef string `bson:"href,omitempty"  json:"href,omitempty"`
+	ID   string `bson:"id,omitempty"  json:"id,omitempty"`
 }
 
 type QMIObject struct {
 	HRef string `bson:"href,omitempty"  json:"href,omitempty"`
+}
+
+// Version represents information related to a single version for an edition of a dataset
+type Version struct {
+	Dimensions []Dimension `bson:"dimensions,omitempty"     json:"dimensions,omitempty"`
+	Edition    string      `bson:"edition,omitempty"        json:"edition,omitempty"`
+	ID         string      `bson:"id,omitempty"             json:"id,omitempty"`
+	Version    int         `bson:"version,omitempty"        json:"version,omitempty"`
+}
+
+// Dimension represents an overview for a single dimension. This includes a link to the code list API
+// which provides metadata about the dimension and all possible values.
+type Dimension struct {
+	Label string `bson:"label,omitempty"         json:"label,omitempty"`
+	Name  string `bson:"name,omitempty"          json:"name,omitempty"`
 }
 
 // getDatasets retrieves all dataset documents
@@ -210,6 +257,33 @@ func (m *Mongo) getDatasets(ctx context.Context) ([]DatasetUpdate, error) {
 	}
 
 	return datasets, nil
+}
+
+// getDatasetsInstance retrieves a single instance of a dataset
+func (m *Mongo) getDatasetInstance(ctx context.Context, datasetID, edition, version string) (*Version, error) {
+	s := m.Session.Copy()
+	defer s.Close()
+
+	versionNumber, err := strconv.Atoi(version)
+	if err != nil {
+		return nil, err
+	}
+
+	selector := bson.M{
+		"links.dataset.id": datasetID,
+		"edition":          edition,
+		"version":          versionNumber,
+	}
+
+	var datasetVersion Version
+	err = s.DB(m.Database).C("instances").Find(selector).One(&datasetVersion)
+	if err != nil {
+		if err == mgo.ErrNotFound {
+			return nil, errors.New("instance not found")
+		}
+		return nil, err
+	}
+	return &datasetVersion, nil
 }
 
 // writeToFile add csv row to file

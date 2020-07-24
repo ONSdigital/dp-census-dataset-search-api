@@ -4,6 +4,7 @@ import "errors"
 
 // A list of error messages for Search API
 var (
+	ErrBadSearchQuery         = errors.New("bad query sent to elasticsearch index")
 	ErrEmptySearchTerm        = errors.New("empty search term")
 	ErrIndexNotFound          = errors.New("search index not found")
 	ErrInternalServer         = errors.New("internal server error")
