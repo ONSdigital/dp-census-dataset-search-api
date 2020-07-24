@@ -9,7 +9,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/ONSdigital/dp-dataset-api/models"
 	"github.com/ONSdigital/log.go/log"
 	"github.com/globalsign/mgo"
 	"gopkg.in/mgo.v2/bson"
@@ -261,7 +260,7 @@ func (m *Mongo) getDatasets(ctx context.Context) ([]DatasetUpdate, error) {
 }
 
 // getDatasetsInstance retrieves a single instance of a dataset
-func (m *Mongo) getDatasetInstance(ctx context.Context, datasetID, edition, version string) (*models.Version, error) {
+func (m *Mongo) getDatasetInstance(ctx context.Context, datasetID, edition, version string) (*Version, error) {
 	s := m.Session.Copy()
 	defer s.Close()
 
@@ -276,7 +275,7 @@ func (m *Mongo) getDatasetInstance(ctx context.Context, datasetID, edition, vers
 		"version":          versionNumber,
 	}
 
-	var datasetVersion models.Version
+	var datasetVersion Version
 	err = s.DB(m.Database).C("instances").Find(selector).One(&datasetVersion)
 	if err != nil {
 		if err == mgo.ErrNotFound {

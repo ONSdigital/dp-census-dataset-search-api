@@ -54,8 +54,35 @@
 						}
 					},
 					"type": "text"
-                },
-                "title": {
+				},
+				"dimensions": {
+					"type": "nested",
+					"properties": {
+						"label": {
+							"fields": {
+								"raw": {
+									"analyzer": "raw_analyzer",
+									"type": "text",
+									"index_options": "docs",
+									"norms": false
+								}
+							},
+							"type": "text"
+						},
+						"name": {
+							"fields": {
+								"raw": {
+									"analyzer": "raw_analyzer",
+									"type": "text",
+									"index_options": "docs",
+									"norms": false
+								}
+							},
+							"type": "keyword"
+						}
+					}
+				},
+				"title": {
                     "fields": {
 						"raw": {
 							"analyzer": "raw_analyzer",
