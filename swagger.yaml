@@ -249,22 +249,44 @@ components:
       properties:
         alias:
           description: "Highlighted alias field due to matched pieces of text."
-          type: string
+          type: array
+          items:
+            type: string
         description:
           description: "Highlighted description field due to matched pieces of text."
-          type: string
+          type: array
+          items:
+            type: string
+        dimensions.label:
+          description: "Highlighted dimensions label field due to matching text."
+          type: array
+          items:
+            type: string
+        dimensions.name:
+          description: "Highlighted dimensions name field due to matching keyword."
+          type: array
+          items:
+            type: string
         title:
           description: "Highlighted title field due to matched pieces of text."
-          type: string
+          type: array
+          items:
+            type: string
         topic1:
           description: "Highlighted level 1 topic field due to query term matching keyword."
-          type: string
+          type: array
+          items:
+            type: string
         topic2:
           description: "Highlighted level 2 topic field due to query term matching keyword."
-          type: string
+          type: array
+          items:
+            type: string
         topic3:
           description: "Highlighted level 3 topic field due to query term matching keyword."
-          type: string
+          type: array
+          items:
+            type: string
     Taxonomy:
       type: object
       properties:
