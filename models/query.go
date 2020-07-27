@@ -28,9 +28,10 @@ type Query struct {
 
 // Bool represents the desirable goals for query
 type Bool struct {
-	Filter []Filter `json:"filter,omitempty"`
-	Must   []Match  `json:"must,omitempty"`
-	Should []Match  `json:"should,omitempty"`
+	Filter             []Filter `json:"filter,omitempty"`
+	Must               []Match  `json:"must,omitempty"`
+	Should             []Match  `json:"should,omitempty"`
+	MinimumShouldMatch int      `json:"minimum_should_match,omitempty"`
 }
 
 // Filter represents the filtering object (can only contain eiter term or terms but not both)
