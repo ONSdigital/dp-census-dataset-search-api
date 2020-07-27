@@ -282,6 +282,7 @@ func buildSearchQuery(term string, topicFilters []models.Filter, limit, offset i
 						},
 					},
 				},
+				MinimumShouldMatch: 1,
 			},
 		},
 		Sort:      listOfScores,
