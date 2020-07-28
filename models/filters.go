@@ -7,13 +7,44 @@ import (
 	errs "github.com/ONSdigital/dp-census-dataset-search-api/apierrors"
 )
 
-const maximumTopicFilters = 10
+const (
+	maximumDimensionFilters, maximumTopicFilters = 10, 10
+	dimensionName                                = "dimensions.name"
+	topic1                                       = "topic1"
+	topic2                                       = "topic2"
+	topic3                                       = "topic3"
+)
 
 // ErrorInvalidTopics - return error
 func ErrorInvalidTopics(topicList []string) error {
 	topics := strings.Join(topicList, ",")
 	err := errors.New("invalid list of topics to filter by: " + topics)
 	return err
+}
+
+// ValidateDimensions checks the values in dimensions are valid for
+// querying elasticsearch API
+func ValidateDimensions(dimensions string) (*Filter, error) {
+	if dimensions == "" {
+		return nil, nil
+	}
+
+	dimensionList := strings.Split(dimensions, ",")
+
+	if len(dimensionList) > maximumDimensionFilters {
+		return nil, errs.ErrTooManyDimensionFilters
+	}
+
+	return &Filter{
+		Nested: &Nested{
+			Path: "dimensions",
+			Query: []NestedQuery{
+				{
+					Terms: map[string][]string{dimensionName: dimensionList},
+				},
+			},
+		},
+	}, nil
 }
 
 // ValidateTopics checks the values in topics are valid
@@ -48,19 +79,19 @@ func ValidateTopics(topics string) ([]Filter, error) {
 	var filters []Filter
 	if len(topic1List) > 0 {
 		filters = append(filters, Filter{
-			Terms: map[string][]string{"topic1": topic1List},
+			Terms: map[string][]string{topic1: topic1List},
 		})
 	}
 
 	if len(topic2List) > 0 {
 		filters = append(filters, Filter{
-			Terms: map[string][]string{"topic2": topic2List},
+			Terms: map[string][]string{topic2: topic2List},
 		})
 	}
 
 	if len(topic3List) > 0 {
 		filters = append(filters, Filter{
-			Terms: map[string][]string{"topic3": topic3List},
+			Terms: map[string][]string{topic3: topic3List},
 		})
 	}
 

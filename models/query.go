@@ -23,7 +23,8 @@ type Object struct{}
 
 // Query represents the request query details
 type Query struct {
-	Bool Bool `json:"bool"`
+	Bool   *Bool   `json:"bool,omitempty"`
+	Nested *Nested `json:"nested,omitempty"`
 }
 
 // Bool represents the desirable goals for query
@@ -36,8 +37,9 @@ type Bool struct {
 
 // Filter represents the filtering object (can only contain eiter term or terms but not both)
 type Filter struct {
-	Term  map[string]string   `json:"term,omitempty"`
-	Terms map[string][]string `json:"terms,omitempty"`
+	Term   map[string]string   `json:"term,omitempty"`
+	Terms  map[string][]string `json:"terms,omitempty"`
+	Nested *Nested             `json:"nested,omitempty"`
 }
 
 // Match represents the fields that the term should or must match within query
@@ -48,9 +50,8 @@ type Match struct {
 
 // Nested represents a nested query object
 type Nested struct {
-	InnerHits *InnerHits    `json:"inner_hits,omitempty"`
-	Path      string        `json:"path,omitempty"`
-	Query     []NestedQuery `json:"query,omitempty"`
+	Path  string        `json:"path,omitempty"`
+	Query []NestedQuery `json:"query,omitempty"`
 }
 
 // InnerHits represents metadata contained by nested (or inner objects)
@@ -60,7 +61,8 @@ type InnerHits struct {
 
 // NestedQuery represents ...
 type NestedQuery struct {
-	Term map[string]string `json:"term,omitempty"`
+	Term  map[string]string   `json:"term,omitempty"`
+	Terms map[string][]string `json:"terms,omitempty"`
 }
 
 // Scores represents a list of scoring, e.g. scoring on relevance, but can add in secondary
