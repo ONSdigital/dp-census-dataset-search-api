@@ -107,11 +107,11 @@ type TopTaxonomy struct {
 }
 
 type Section struct {
-	Theme Theme `json:"theme`
+	Theme Theme `json:"theme"`
 }
 
 type Theme struct {
-	URI string `json:"uri`
+	URI string `json:"uri"`
 }
 
 func CreateFirstLevelTaxonomy(ctx context.Context, reader io.Reader) (*TopTaxonomy, error) {
@@ -142,7 +142,7 @@ type Description struct {
 }
 
 type ChildSection struct {
-	URI string `json:"uri`
+	URI string `json:"uri"`
 }
 
 func GetTopics(ctx context.Context, url, parentTopic string, level int) (*models.Topic, error) {
