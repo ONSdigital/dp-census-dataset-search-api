@@ -10,18 +10,9 @@ type Hits struct {
 }
 
 type HitList struct {
-	Score     float64           `json:"_score"`
-	Source    SearchResult      `json:"_source"`
-	Matches   Matches           `json:"highlight,omitempty"`
-	InnerHits ResponseInnerHits `json:"inner_hits,omitempty"`
-}
-
-type ResponseInnerHits struct {
-	Dimensions Dimensions `json:"dimensions,omitempty"`
-}
-
-type Dimensions struct {
-	Hits DimensionHits `json:"hits,omitempty"`
+	Score   float64      `json:"_score"`
+	Source  SearchResult `json:"_source"`
+	Matches Matches      `json:"highlight,omitempty"`
 }
 
 type DimensionHits struct {

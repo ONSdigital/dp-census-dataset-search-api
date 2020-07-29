@@ -34,6 +34,7 @@ func (api *SearchAPI) getDatasets(w http.ResponseWriter, r *http.Request) {
 	q := r.FormValue("q")
 	requestedLimit := r.FormValue("limit")
 	requestedOffset := r.FormValue("offset")
+	dimensions := r.FormValue("dimensions")
 	topics := r.FormValue("topics")
 
 	logData := log.Data{
@@ -41,6 +42,7 @@ func (api *SearchAPI) getDatasets(w http.ResponseWriter, r *http.Request) {
 		"requested_limit":  requestedLimit,
 		"requested_offset": requestedOffset,
 		"topics":           topics,
+		"dimensions":       dimensions,
 	}
 
 	log.Event(ctx, "getDatasets endpoint: incoming request", log.INFO, logData)
@@ -89,6 +91,13 @@ func (api *SearchAPI) getDatasets(w http.ResponseWriter, r *http.Request) {
 	logData["limit"] = page.Limit
 	logData["offset"] = page.Offset
 
+	dimensionFilters, err := models.ValidateDimensions(dimensions)
+	if err != nil {
+		log.Event(ctx, "getDatasets endpoint: validate filter by topics", log.ERROR, log.Error(err), logData)
+		setErrorCode(w, err)
+		return
+	}
+
 	topicFilters, err := models.ValidateTopics(topics)
 	if err != nil {
 		log.Event(ctx, "getDatasets endpoint: validate filter by topics", log.ERROR, log.Error(err), logData)
@@ -99,7 +108,7 @@ func (api *SearchAPI) getDatasets(w http.ResponseWriter, r *http.Request) {
 	log.Event(ctx, "getDatasets endpoint: just before querying search index", log.INFO, logData)
 
 	// build dataset search query
-	query := buildSearchQuery(term, topicFilters, limit, offset)
+	query := buildSearchQuery(term, dimensionFilters, topicFilters, limit, offset)
 
 	response, status, err := api.elasticsearch.QueryDatasetSearch(ctx, api.datasetIndex, query, limit, offset)
 	if err != nil {
@@ -113,25 +122,13 @@ func (api *SearchAPI) getDatasets(w http.ResponseWriter, r *http.Request) {
 		Limit:      page.Limit,
 		Offset:     page.Offset,
 		TotalCount: response.Hits.Total,
+		Items:      []models.SearchResult{},
 	}
 
 	for _, result := range response.Hits.HitList {
 
 		doc := result.Source
 		doc.Matches = result.Matches
-
-		// Retrieve inner hit matches
-		if result.InnerHits.Dimensions.Hits.Hits != nil {
-			for _, hit := range result.InnerHits.Dimensions.Hits.Hits {
-				if hit.Matches.DimensionLabel != nil {
-					doc.Matches.DimensionLabel = hit.Matches.DimensionLabel
-				}
-
-				if hit.Matches.DimensionName != nil {
-					doc.Matches.DimensionName = hit.Matches.DimensionName
-				}
-			}
-		}
 
 		searchResults.Items = append(searchResults.Items, doc)
 	}
@@ -177,10 +174,9 @@ func setErrorCode(w http.ResponseWriter, err error) {
 	}
 }
 
-func buildSearchQuery(term string, topicFilters []models.Filter, limit, offset int) interface{} {
+func buildSearchQuery(term string, dimensionFilters []models.Filter, topicFilters []models.Filter, limit, offset int) interface{} {
 	var object models.Object
 	highlight := make(map[string]models.Object)
-	innerHighlight := make(map[string]models.Object)
 
 	highlight["alias"] = object
 	highlight["description"] = object
@@ -188,11 +184,8 @@ func buildSearchQuery(term string, topicFilters []models.Filter, limit, offset i
 	highlight["topic1"] = object
 	highlight["topic2"] = object
 	highlight["topic3"] = object
-	innerHighlight["dimensions.label"] = object
-	innerHighlight["dimensions.name"] = object
-
-	// Nested fields like dimensions in the dataset resource cannot be highlighted by es due to being a nested type
-	// Instead this could be done within the API but result in a performance hit or we store the dimension values in the root document
+	highlight["dimensions.label"] = object
+	highlight["dimensions.name"] = object
 
 	alias := make(map[string]string)
 	description := make(map[string]string)
@@ -248,12 +241,12 @@ func buildSearchQuery(term string, topicFilters []models.Filter, limit, offset i
 		From: offset,
 		Size: limit,
 		Highlight: &models.Highlight{
+			Fields:   highlight,
 			PreTags:  []string{"<b><em>"},
 			PostTags: []string{"</em></b>"},
-			Fields:   highlight,
 		},
 		Query: models.Query{
-			Bool: models.Bool{
+			Bool: &models.Bool{
 				Should: []models.Match{
 					aliasMatch,
 					descriptionMatch,
@@ -263,13 +256,6 @@ func buildSearchQuery(term string, topicFilters []models.Filter, limit, offset i
 					topic3Match,
 					{
 						Nested: &models.Nested{
-							InnerHits: &models.InnerHits{
-								Hightlight: &models.Highlight{
-									Fields:   innerHighlight,
-									PreTags:  []string{"<b><em>"},
-									PostTags: []string{"</em></b>"},
-								},
-							},
 							Path: "dimensions",
 							Query: []models.NestedQuery{
 								{
@@ -291,6 +277,10 @@ func buildSearchQuery(term string, topicFilters []models.Filter, limit, offset i
 
 	if topicFilters != nil {
 		query.Query.Bool.Filter = topicFilters
+	}
+
+	if dimensionFilters != nil && len(dimensionFilters) > 0 {
+		query.Query.Bool.Filter = append(query.Query.Bool.Filter, dimensionFilters...)
 	}
 
 	return query
