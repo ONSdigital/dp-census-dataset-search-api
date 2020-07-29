@@ -54,6 +54,20 @@ func run(ctx context.Context) error {
 		return err
 	}
 
+	// Read in Dimensions JSON into memory
+	dimensionsFile, err := ioutil.ReadFile(cfg.DimensionsFilename)
+	if err != nil {
+		log.Event(ctx, "failed to read dimensions file", log.ERROR, log.Error(err), log.Data{"dimensions_filename": cfg.DimensionsFilename})
+		return err
+	}
+
+	var dimensions models.DimensionsDoc
+
+	if err = json.Unmarshal([]byte(dimensionsFile), &dimensions); err != nil {
+		log.Event(ctx, "unable to unmarshal taxonomy into struct", log.ERROR, log.Error(err), log.Data{"taxonomy_filename": cfg.TaxonomyFilename})
+		return err
+	}
+
 	cli := dphttp.NewClient()
 	esAPI := es.NewElasticSearchAPI(cli, cfg.ElasticSearchAPIURL)
 
@@ -65,7 +79,7 @@ func run(ctx context.Context) error {
 
 	apiErrors := make(chan error, 1)
 
-	api.CreateAndInitialiseSearchAPI(ctx, cfg.BindAddr, esAPI, cfg.MaxSearchResultsOffset, cfg.DatasetIndex, taxonomy, apiErrors)
+	api.CreateAndInitialiseSearchAPI(ctx, cfg.BindAddr, esAPI, cfg.MaxSearchResultsOffset, cfg.DatasetIndex, dimensions, taxonomy, apiErrors)
 
 	// block until a fatal error occurs
 	select {

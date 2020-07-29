@@ -23,7 +23,7 @@ func (api *SearchAPI) getTaxonomy(w http.ResponseWriter, r *http.Request) {
 
 	b, err := json.Marshal(api.taxonomy)
 	if err != nil {
-		log.Event(ctx, "getTaxonomy endpoint: failed to marshal search resource into bytes", log.ERROR, log.Error(err))
+		log.Event(ctx, "getTaxonomy endpoint: failed to marshal taxonomy resource into bytes", log.ERROR, log.Error(err))
 		setErrorCode(w, errs.ErrInternalServer)
 	}
 
@@ -33,7 +33,7 @@ func (api *SearchAPI) getTaxonomy(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 
-	log.Event(ctx, "getTaxonomy endpoint: successfully searched index", log.INFO)
+	log.Event(ctx, "getTaxonomy endpoint: successfully retreived taxonomy", log.INFO)
 }
 
 // Topic ...
@@ -87,14 +87,14 @@ func (api *SearchAPI) getTopic(w http.ResponseWriter, r *http.Request) {
 
 	if !hasValidTopic {
 		err := errs.ErrTopicNotFound
-		log.Event(ctx, "getTopic endpoint: failed to marshal search resource into bytes", log.ERROR, log.Error(err), logData)
+		log.Event(ctx, "getTopic endpoint: failed to find topic", log.ERROR, log.Error(err), logData)
 		setErrorCode(w, err)
 		return
 	}
 
 	b, err := json.Marshal(result)
 	if err != nil {
-		log.Event(ctx, "getTopic endpoint: failed to marshal search resource into bytes", log.ERROR, log.Error(err), logData)
+		log.Event(ctx, "getTopic endpoint: failed to marshal topic resource into bytes", log.ERROR, log.Error(err), logData)
 		setErrorCode(w, errs.ErrInternalServer)
 	}
 
@@ -104,7 +104,7 @@ func (api *SearchAPI) getTopic(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 
-	log.Event(ctx, "getTopic endpoint: successfully searched index", log.INFO, logData)
+	log.Event(ctx, "getTopic endpoint: successfully retrieved topic", log.INFO, logData)
 }
 
 func checkChildTopics(taxonomy models.Topic, topic string) (result *Topic, hasValidTopic bool) {
