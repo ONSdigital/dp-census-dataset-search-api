@@ -91,7 +91,7 @@ func (api *SearchAPI) getDatasets(w http.ResponseWriter, r *http.Request) {
 	logData["limit"] = page.Limit
 	logData["offset"] = page.Offset
 
-	dimensionFilter, err := models.ValidateDimensions(dimensions)
+	dimensionFilters, err := models.ValidateDimensions(dimensions)
 	if err != nil {
 		log.Event(ctx, "getDatasets endpoint: validate filter by topics", log.ERROR, log.Error(err), logData)
 		setErrorCode(w, err)
@@ -108,7 +108,7 @@ func (api *SearchAPI) getDatasets(w http.ResponseWriter, r *http.Request) {
 	log.Event(ctx, "getDatasets endpoint: just before querying search index", log.INFO, logData)
 
 	// build dataset search query
-	query := buildSearchQuery(term, dimensionFilter, topicFilters, limit, offset)
+	query := buildSearchQuery(term, dimensionFilters, topicFilters, limit, offset)
 
 	response, status, err := api.elasticsearch.QueryDatasetSearch(ctx, api.datasetIndex, query, limit, offset)
 	if err != nil {
@@ -122,6 +122,7 @@ func (api *SearchAPI) getDatasets(w http.ResponseWriter, r *http.Request) {
 		Limit:      page.Limit,
 		Offset:     page.Offset,
 		TotalCount: response.Hits.Total,
+		Items:      []models.SearchResult{},
 	}
 
 	for _, result := range response.Hits.HitList {
@@ -173,7 +174,7 @@ func setErrorCode(w http.ResponseWriter, err error) {
 	}
 }
 
-func buildSearchQuery(term string, dimensionFilter *models.Filter, topicFilters []models.Filter, limit, offset int) interface{} {
+func buildSearchQuery(term string, dimensionFilters []models.Filter, topicFilters []models.Filter, limit, offset int) interface{} {
 	var object models.Object
 	highlight := make(map[string]models.Object)
 
@@ -240,9 +241,9 @@ func buildSearchQuery(term string, dimensionFilter *models.Filter, topicFilters 
 		From: offset,
 		Size: limit,
 		Highlight: &models.Highlight{
+			Fields:   highlight,
 			PreTags:  []string{"<b><em>"},
 			PostTags: []string{"</em></b>"},
-			Fields:   highlight,
 		},
 		Query: models.Query{
 			Bool: &models.Bool{
@@ -278,8 +279,8 @@ func buildSearchQuery(term string, dimensionFilter *models.Filter, topicFilters 
 		query.Query.Bool.Filter = topicFilters
 	}
 
-	if dimensionFilter != nil && dimensionFilter.Nested != nil {
-		query.Query.Bool.Filter = append(query.Query.Bool.Filter, *dimensionFilter)
+	if dimensionFilters != nil && len(dimensionFilters) > 0 {
+		query.Query.Bool.Filter = append(query.Query.Bool.Filter, dimensionFilters...)
 	}
 
 	return query

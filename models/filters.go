@@ -24,7 +24,7 @@ func ErrorInvalidTopics(topicList []string) error {
 
 // ValidateDimensions checks the values in dimensions are valid for
 // querying elasticsearch API
-func ValidateDimensions(dimensions string) (*Filter, error) {
+func ValidateDimensions(dimensions string) ([]Filter, error) {
 	if dimensions == "" {
 		return nil, nil
 	}
@@ -35,16 +35,22 @@ func ValidateDimensions(dimensions string) (*Filter, error) {
 		return nil, errs.ErrTooManyDimensionFilters
 	}
 
-	return &Filter{
-		Nested: &Nested{
-			Path: "dimensions",
-			Query: []NestedQuery{
-				{
-					Terms: map[string][]string{dimensionName: dimensionList},
+	var filters []Filter
+	for _, dimension := range dimensionList {
+		filters = append(filters, Filter{
+			Nested: &Nested{
+				Path: "dimensions",
+				Query: []NestedQuery{
+					{
+						Term: map[string]string{
+							dimensionName: dimension},
+					},
 				},
 			},
-		},
-	}, nil
+		})
+	}
+
+	return filters, nil
 }
 
 // ValidateTopics checks the values in topics are valid
@@ -79,19 +85,19 @@ func ValidateTopics(topics string) ([]Filter, error) {
 	var filters []Filter
 	if len(topic1List) > 0 {
 		filters = append(filters, Filter{
-			Terms: map[string][]string{topic1: topic1List},
+			Terms: map[string]interface{}{topic1: topic1List},
 		})
 	}
 
 	if len(topic2List) > 0 {
 		filters = append(filters, Filter{
-			Terms: map[string][]string{topic2: topic2List},
+			Terms: map[string]interface{}{topic2: topic2List},
 		})
 	}
 
 	if len(topic3List) > 0 {
 		filters = append(filters, Filter{
-			Terms: map[string][]string{topic3: topic3List},
+			Terms: map[string]interface{}{topic3: topic3List},
 		})
 	}
 
