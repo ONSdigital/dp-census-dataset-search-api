@@ -22,7 +22,7 @@ You can run either of the following commands:
     ```
     - Run `make cmd-datasets-csv`
 - Use go run command with or without flags `-mongodb-bind-addr` and/or `-filename` being set
-    - `go run retrieve-cmd-datasets/main.go -mongodb-bind-addr=<mongodb bind address> -filename=<file name and loaction>`
+    - `go run retrieve-cmd-datasets/main.go -mongodb-bind-addr=<mongodb bind address> -filename=<file name and location>`
     
 if you do not set the flags or environment variables for mongodb bind address and filename, the script will use a default value set to `localhost:27017` and `cmd-datasets.csv` respectively.
 
@@ -30,7 +30,7 @@ if you do not set the flags or environment variables for mongodb bind address an
 
 This script reads a csv file defined by flag/environment variable or default value and stores the dataset data into elasticsearch. The csv must contain particular headers (but not in any necessary order).
 
-One can use the Retrieve cmd datasets script to generate a new csv file or use the pre-generated one stored as `datasets.csv`.
+One can use the Retrieve cmd datasets script to generate a new csv file or use the pre-generated one stored as `cmd-datasets.csv`.
 
 - Use Makefile
     - Set `dataset_index`, `filename` and/or `elasticsearch_url` environment variable with:
@@ -39,9 +39,19 @@ One can use the Retrieve cmd datasets script to generate a new csv file or use t
     export filename=<file name and loaction>
     export elasticsearch_url=<elasticsearch bind address>
     ```
+    - Optionally set `dimensions_filename` environment variable with, should end with `.json`:
+    ```
+    export taxonomy_filename=<filename and location>
+    ```
+    - Optionally set `taxonomy_filename` environment variable with, should end with `.json`:
+    ```
+    export taxonomy_filename=<filename and location>
+    ```
     - Run `make upload-datasets`
-- Use go run command with or without flags `-dataset-index`, `-filename` and/or `elasticsearch_url` being set
-    - `go run upload-datasets/main.go -dataset-index=<elasticsearch index> -filename=<file name and loaction> -elasticsearch_url=<elasticsearch bin address>`
+- Use go run command with or without flags `-dataset-index`, `-filename` and/or `-elasticsearch_url` being set
+    - `go run upload-datasets/main.go -dataset-index=<elasticsearch index> -filename=<file name and loaction> -dimensions-filename=<dimensions file and location> -taxonomy-filename=<taxonomy file name and location> -elasticsearch_url=<elasticsearch bin address>`
+
+Taxonomy and Dimensions will be stored in a json file that will be read into memory in the dataset search API on start up, these file names and locations should match the environment configurations for `TAXONOMY_FILENAME` and `DIMENSIONS_FILENAME` respectively. For ease of use just run the make commands without editing flags or setting environment variables for these variables.
 
 ### Retrieve Dataset Taxonomy
 

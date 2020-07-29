@@ -7,6 +7,7 @@ MONGODB_BIND_ADDR=${mongodb_bind_addr}
 FILENAME=${filename}
 DATASET_INDEX=${dataset_index}
 ELASTICSEARCH_URL=${elasticsearch_url}
+DIMENSIONS_JSON=${dimensions_filename}
 TAXONOMY_JSON=${taxonomy_filename}
 
 RETRIEVE_CMD_DATASETS=retrieve-cmd-datasets
@@ -27,7 +28,7 @@ taxonomy-json: build
 
 upload-datasets: build
 	go build -o ../$(BUILD)/$(BIN_DIR)/$(UPLOAD_DATASETS) $(UPLOAD_DATASETS)/main.go
-	HUMAN_LOG=1 go run -race $(UPLOAD_DATASETS)/main.go -filename=$(FILENAME) -dataset-index=$(DATASET_INDEX) -elasticsearch-url=$(ELASTICSEARCH_URL)
+	HUMAN_LOG=1 go run -race $(UPLOAD_DATASETS)/main.go -filename=$(FILENAME) -dimensions-filename=$(DIMENSIONS_JSON) -taxonomy-filename=$(TAXONOMY_JSON) -dataset-index=$(DATASET_INDEX) -elasticsearch-url=$(ELASTICSEARCH_URL)
 
 test:
 	go test -cover -race ./...

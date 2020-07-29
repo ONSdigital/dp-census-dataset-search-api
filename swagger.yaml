@@ -58,6 +58,44 @@ paths:
               example: 86400
         500:
           $ref: '#/components/responses/InternalError'
+  /dimensions:
+    get:
+      tags:
+      - "Public"
+      summary: "Returns a list of dimensions that exist for the datasets endpoint."
+      responses:
+        200:
+          description: "A json list containing dimensions that exist for datasets accessible by the datasets endpoint. Should be used to check what dimensions are filterable on the datasets endpoint." 
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Dimensions'
+        500:
+          $ref: '#/components/responses/InternalError'
+    options:
+      tags:
+      - "Public"
+      summary: "Information about the communication options available for the target resource"
+      responses:
+        204:
+          description: "No Content"
+          headers:
+            Access-Control-Allow-Methods:
+              schema:
+                type: string
+              description: "The methods allowed access against this resource as a comma separated list."
+            Access-Control-Allow-Origin:
+              schema:
+                type: string
+              description: "The web urls allowed access against this resource as a comma separated list."
+              example: "*"
+            Access-Control-Max-Age:
+              schema:
+                type: integer
+              description: "Header indicates how long the results of a preflight request can be cached."
+              example: 86400
+        500:
+          $ref: '#/components/responses/InternalError'
   /taxonomy:
     get:
       tags:
@@ -294,11 +332,30 @@ components:
           type: array
           items:
             type: string
+    Dimensions:
+      type: object
+      properties:
+        total_count:
+          description: "The total number of dimensions listed in doc."
+          type: integer
+        items:
+          description: "A list of dimensions, containing a name and label field. The name field can be used to filter the datasets endpoint via the dimensions parameter."
+          type: array
+          items:
+            required: [label,name]
+            type: object
+            properties:
+              label:
+                description: "A human readable value of the dimension."
+                type: string
+              name:
+                description: "The dimension value to use as a filter for the dimensions query parameter on the datasets endpoint (when searching for datasets)."
+                type: string
     Taxonomy:
       type: object
       properties:
         topics:
-          description: ""
+          description: "A hierarchical structure to describe how topics relate to one another through parent/child relationships."
           type: array
           items:
             $ref: '#/components/schemas/Topics'

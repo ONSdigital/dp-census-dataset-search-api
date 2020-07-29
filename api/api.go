@@ -13,15 +13,16 @@ var httpServer *server.Server
 
 // SearchAPI manages searches across indices
 type SearchAPI struct {
+	datasetIndex      string
 	defaultMaxResults int
+	dimensions        models.DimensionsDoc
 	elasticsearch     Elasticsearcher
 	router            *mux.Router
-	datasetIndex      string
 	taxonomy          models.Taxonomy
 }
 
 // CreateAndInitialiseSearchAPI manages all the routes configured to API
-func CreateAndInitialiseSearchAPI(ctx context.Context, bindAddr string, esAPI Elasticsearcher, defaultMaxResults int, datasetIndex string, taxonomy models.Taxonomy, errorChan chan error) {
+func CreateAndInitialiseSearchAPI(ctx context.Context, bindAddr string, esAPI Elasticsearcher, defaultMaxResults int, datasetIndex string, dimensions models.DimensionsDoc, taxonomy models.Taxonomy, errorChan chan error) {
 
 	router := mux.NewRouter()
 	routes(ctx,
@@ -29,6 +30,7 @@ func CreateAndInitialiseSearchAPI(ctx context.Context, bindAddr string, esAPI El
 		esAPI,
 		defaultMaxResults,
 		datasetIndex,
+		dimensions,
 		taxonomy,
 	)
 
@@ -51,17 +53,20 @@ func routes(ctx context.Context,
 	elasticsearch Elasticsearcher,
 	defaultMaxResults int,
 	datasetIndex string,
+	dimensions models.DimensionsDoc,
 	taxonomy models.Taxonomy) *SearchAPI {
 
 	api := SearchAPI{
+		datasetIndex:      datasetIndex,
 		defaultMaxResults: defaultMaxResults,
+		dimensions:        dimensions,
 		elasticsearch:     elasticsearch,
 		router:            router,
-		datasetIndex:      datasetIndex,
 		taxonomy:          taxonomy,
 	}
 
 	api.router.HandleFunc("/datasets", api.getDatasets).Methods("GET", "OPTIONS")
+	api.router.HandleFunc("/dimensions", api.getDimensions).Methods("GET", "OPTIONS")
 	api.router.HandleFunc("/taxonomy", api.getTaxonomy).Methods("GET", "OPTIONS")
 	api.router.HandleFunc("/taxonomy/{topic}", api.getTopic).Methods("GET", "OPTIONS")
 
