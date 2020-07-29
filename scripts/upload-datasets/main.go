@@ -22,14 +22,15 @@ const (
 	defaultDatasetIndex        = "dataset-test"
 	defaultElasticsearchAPIURL = "http://localhost:9200"
 	defaultFilename            = "cmd-datasets.csv"
-	defaultTaxonomyFile        = "../taxonomy/taxonomy.json"
+	defaultDimensionFile       = "../data/dimensions.json"
+	defaultTaxonomyFile        = "../data/taxonomy.json"
 	mappingsFile               = "dataset-mappings.json"
 )
 
 var (
-	datasetIndex, elasticsearchAPIURL, filename, taxonomyFilename string
-	taxonomy                                                      models.Taxonomy
-	topicLevels                                                   = make(map[string]TopicLevels)
+	datasetIndex, elasticsearchAPIURL, filename, dimensionsFilename, taxonomyFilename string
+	taxonomy                                                                          models.Taxonomy
+	topicLevels                                                                       = make(map[string]TopicLevels)
 )
 
 // Dataset represents the data stored against a resource in elasticsearch index
@@ -62,6 +63,7 @@ func main() {
 	flag.StringVar(&datasetIndex, "dataset-index", defaultDatasetIndex, "the elasticsearch index that datasets will be uploaded to")
 	flag.StringVar(&elasticsearchAPIURL, "elasticsearch-url", defaultElasticsearchAPIURL, "the elasticsearch url")
 	flag.StringVar(&filename, "filename", defaultFilename, "the csv filename that contains data to upload to elasticsearch")
+	flag.StringVar(&dimensionsFilename, "dimensions-filename", defaultDimensionFile, "the file locataion and name that contains a list of dataset dimensions")
 	flag.StringVar(&taxonomyFilename, "taxonomy-filename", defaultTaxonomyFile, "the file locataion and name that contains the taxonomy hierarchy")
 	flag.Parse()
 
@@ -77,11 +79,15 @@ func main() {
 		filename = defaultFilename
 	}
 
+	if dimensionsFilename == "" {
+		dimensionsFilename = defaultDimensionFile
+	}
+
 	if taxonomyFilename == "" {
 		taxonomyFilename = defaultTaxonomyFile
 	}
 
-	log.Event(ctx, "script variables", log.INFO, log.Data{"dataset_index": datasetIndex, "elasticsearch_api_url": elasticsearchAPIURL, "filename": filename, "taxonomy-file": taxonomyFilename})
+	log.Event(ctx, "script variables", log.INFO, log.Data{"dataset_index": datasetIndex, "elasticsearch_api_url": elasticsearchAPIURL, "filename": filename, "dimensions-file": dimensionsFilename, "taxonomy-file": taxonomyFilename})
 
 	cli := dphttp.NewClient()
 	esAPI := es.NewElasticSearchAPI(cli, elasticsearchAPIURL)
@@ -171,6 +177,7 @@ func uploadDocs(ctx context.Context, esAPI *es.API, indexName, filename string) 
 
 	count := 0
 
+	dimensionMap := make(map[string]string)
 	// Iterate through the records
 	for {
 		count++
@@ -207,6 +214,7 @@ func uploadDocs(ctx context.Context, esAPI *es.API, indexName, filename string) 
 				Label: dl[i],
 				Name:  dn[i],
 			})
+			dimensionMap[dn[i]] = dl[i]
 		}
 
 		datasetDoc.Dimensions = dimensions
@@ -236,7 +244,49 @@ func uploadDocs(ctx context.Context, esAPI *es.API, indexName, filename string) 
 		}
 	}
 
+	log.Event(ctx, "dimensions?", log.Data{"dimensions": dimensionMap})
+
+	dimensionList := createDimensionList(ctx, dimensionMap)
+	// Store dimensions to a file
+	file, err := json.MarshalIndent(dimensionList, "", "  ")
+	if err != nil {
+		log.Event(ctx, "failed to marshal taxonomy with indentation", log.FATAL, log.Error(err))
+		os.Exit(1)
+	}
+
+	if err = ioutil.WriteFile(dimensionsFilename, file, 0644); err != nil {
+		log.Event(ctx, "failed to write to file", log.FATAL, log.Error(err))
+		os.Exit(1)
+	}
+
 	return nil
+}
+
+// DimensionsDoc represents a list of dimensions
+type DimensionsDoc struct {
+	Dimensions []DimensionObject `json:"items"`
+	TotalCount int               `json:"total_count"`
+}
+
+// DimensionObject represents the structure of a dimension
+type DimensionObject struct {
+	Label string `json:"label,omitempty"`
+	Name  string `json:"name,omitempty"`
+}
+
+func createDimensionList(ctx context.Context, dimensionMap map[string]string) DimensionsDoc {
+	var dimensions []DimensionObject
+	for k, v := range dimensionMap {
+		dimensions = append(dimensions, DimensionObject{
+			Label: v,
+			Name:  k,
+		})
+	}
+
+	return DimensionsDoc{
+		Dimensions: dimensions,
+		TotalCount: len(dimensions),
+	}
 }
 
 var validHeaders = map[string]bool{

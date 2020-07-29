@@ -24,7 +24,7 @@ const (
 var (
 	filename string
 
-	defaultFilename = "../taxonomy/taxonomy.json"
+	defaultFilename = "../data/taxonomy.json"
 )
 
 var topicList = make(map[string]int)

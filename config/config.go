@@ -8,6 +8,7 @@ import (
 type Config struct {
 	BindAddr                  string `envconfig:"BIND_ADDR"                  json:"-"`
 	DatasetIndex              string `envconfig:"DATASET_SEARCH_INDEX"`
+	DimensionsFilename        string `envconfig:"DIMENSIONS_FILENAME"`
 	ElasticSearchAPIURL       string `envconfig:"ELASTIC_SEARCH_URL"         json:"-"`
 	MaxSearchResultsOffset    int    `envconfig:"MAX_SEARCH_RESULTS_OFFSET"`
 	SignElasticsearchRequests bool   `envconfig:"SIGN_ELASTICSEARCH_REQUESTS"`
@@ -25,10 +26,11 @@ func Get() (*Config, error) {
 	cfg = &Config{
 		BindAddr:                  ":10200",
 		DatasetIndex:              "dataset-test",
+		DimensionsFilename:        "data/dimensions.json",
 		ElasticSearchAPIURL:       "http://localhost:9200",
 		MaxSearchResultsOffset:    1000,
 		SignElasticsearchRequests: false,
-		TaxonomyFilename:          "taxonomy/taxonomy.json",
+		TaxonomyFilename:          "data/taxonomy.json",
 	}
 
 	return cfg, envconfig.Process("", cfg)
